@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CV Forge — ATS-proof CV maker</title>
+  <meta name="description" content="Keep one memory of your whole career and generate an ATS-proof CV tailored to any job description.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M9 10h14M9 16h14M9 22h9' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <noscript><p class="noscript">CV Forge needs JavaScript enabled.</p></noscript>
+
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true"></span><strong>CV Forge</strong><span class="tagline">ATS-proof CVs from one memory</span></div>
+    <div class="topbar-right">
+      <span id="saveStatus" class="save-status" title="Your data is saved in this browser">Saved</span>
+      <button class="btn ghost small" id="themeToggle" type="button" title="Toggle dark mode">Theme</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="memory" class="tab active" aria-selected="true">1 · My Memory <span class="pill" id="completeness">0%</span></button>
+    <button role="tab" data-tab="job" class="tab" aria-selected="false">2 · Target Job</button>
+    <button role="tab" data-tab="cv" class="tab" aria-selected="false">3 · Tailored CV <span class="pill" id="scorePill">–</span></button>
+    <button role="tab" data-tab="history" class="tab" aria-selected="false">Applications <span class="pill" id="historyCount">0</span></button>
+    <button role="tab" data-tab="settings" class="tab" aria-selected="false">Settings</button>
+  </nav>
+
+  <main>
+    <!-- ============ MEMORY ============ -->
+    <section class="panel active" id="tab-memory" role="tabpanel">
+      <div class="panel-head">
+        <div>
+          <h2>My Memory</h2>
+          <p class="muted">Everything about your career, kept in one place. Add <em>more</em> than fits on one CV — every role, project, bullet and skill. Each tailored CV picks the most relevant parts.</p>
+        </div>
+        <div class="actions">
+          <button class="btn" data-action="import-text" type="button">Paste existing CV</button>
+          <button class="btn" data-action="import-json" type="button">Import backup</button>
+          <button class="btn" data-action="export-json" type="button">Export backup</button>
+          <details class="menu">
+            <summary class="btn ghost">More ▾</summary>
+            <div class="menu-body">
+              <button class="btn ghost" data-action="load-starter" type="button">Load Aayush starter draft</button>
+              <button class="btn ghost" data-action="load-example" type="button">Load example profile</button>
+              <button class="btn ghost" data-action="export-portfolio" type="button">Download portfolio website</button>
+              <button class="btn ghost danger" data-action="clear-profile" type="button">Clear memory…</button>
+            </div>
+          </details>
+        </div>
+      </div>
+      <div id="memoryTips" class="tips"></div>
+      <div id="memoryForm" class="memory-form"></div>
+    </section>
+
+    <!-- ============ JOB ============ -->
+    <section class="panel" id="tab-job" role="tabpanel" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Target Job</h2>
+          <p class="muted">Paste the full job description. CV Forge researches it: required vs. nice-to-have keywords, seniority, years, education — and checks each against your memory.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" data-action="example-job" type="button">Use example job</button>
+          <button class="btn primary" data-action="build" type="button">Build my CV →</button>
+        </div>
+      </div>
+      <div class="job-grid">
+        <div class="card">
+          <label class="field"><span>Job post URL (optional, for your records)</span><input id="jobUrl" type="url" placeholder="https://…" maxlength="500"></label>
+          <label class="field grow"><span>Job description</span>
+            <textarea id="jobText" rows="22" maxlength="60000" placeholder="Paste the whole job post here — title, responsibilities, requirements, nice-to-haves…"></textarea>
+          </label>
+        </div>
+        <div class="card" id="analysisView"><p class="muted">Analysis appears here as you paste.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ CV ============ -->
+    <section class="panel" id="tab-cv" role="tabpanel" hidden>
+      <div class="cv-grid">
+        <aside class="card cv-side" id="cvSide"></aside>
+        <div class="cv-main">
+          <div class="cv-toolbar">
+            <div class="seg" role="group" aria-label="Template">
+              <button class="seg-btn" data-template="classic" type="button">Classic</button>
+              <button class="seg-btn" data-template="modern" type="button">Modern</button>
+              <button class="seg-btn" data-template="compact" type="button">Compact</button>
+            </div>
+            <div class="actions">
+              <button class="btn primary" data-action="download-pdf" type="button">PDF</button>
+              <button class="btn primary" data-action="download-docx" type="button">Word (.docx)</button>
+              <details class="menu">
+                <summary class="btn">More formats ▾</summary>
+                <div class="menu-body">
+                  <button class="btn ghost" data-action="download-txt" type="button">Plain text (.txt)</button>
+                  <button class="btn ghost" data-action="download-md" type="button">Markdown (.md)</button>
+                  <button class="btn ghost" data-action="download-html" type="button">Web page (.html)</button>
+                  <button class="btn ghost" data-action="copy-text" type="button">Copy text for online forms</button>
+                </div>
+              </details>
+              <button class="btn" data-action="save-application" type="button">Save to Applications</button>
+            </div>
+          </div>
+          <div class="page-wrap"><div class="cv-page" id="cvPreview"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HISTORY ============ -->
+    <section class="panel" id="tab-history" role="tabpanel" hidden>
+      <div class="panel-head">
+        <div><h2>Applications</h2><p class="muted">Every CV you save, with the job post it was made for. Reopen, re-download or track status.</p></div>
+      </div>
+      <div id="historyView"></div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section class="panel" id="tab-settings" role="tabpanel" hidden>
+      <div class="panel-head"><div><h2>Settings</h2></div></div>
+      <div class="settings-grid" id="settingsView"></div>
+    </section>
+  </main>
+
+  <dialog id="dialog" class="dialog"><form method="dialog" class="dialog-inner" id="dialogInner"></form></dialog>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <input type="file" id="fileInput" accept=".json,application/json" hidden>
+  <iframe id="printFrame" title="Print frame" class="print-frame" aria-hidden="true" tabindex="-1"></iframe>
+
+  <script src="js/util.js"></script>
+  <script src="js/skills-db.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/analyzer.js"></script>
+  <script src="js/tailor.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/docx.js"></script>
+  <script src="js/importer.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="data/profiles.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "cv-forge",
+  "version": "1.0.0",
+  "description": "ATS-proof CV maker: one memory of your career, a tailored CV for every job.",
+  "private": true,
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -p 8080 .",
+    "test": "node --test",
+    "e2e": "node tests/e2e.js"
+  },
+  "license": "MIT"
+}
