@@ -1,0 +1,25 @@
+Full Stack Engineer — Praverse Tech (Fresher)
+We are looking for a hands-on Full Stack Developer & Technical Lead who can independently manage frontend and backend development across our web and mobile application projects.
+Key Responsibilities
+- Develop and maintain frontend and backend applications.
+- Work on responsive web applications and support mobile application development.
+- Build and integrate APIs, databases, authentication systems, dashboards, admin panels, and third-party services.
+- Review existing code, identify issues, improve performance, and resolve bugs.
+- Support deployment, production fixes, version releases, and environment management.
+- Perform functional testing, regression testing, API testing, and end-to-end software testing.
+- Take ownership of assigned software projects from development through testing and deployment.
+- Guide and supervise junior developers, review their work, assign technical tasks, and ensure timely completion.
+- Support AI integrations, APIs, automation workflows, and other emerging technology integrations where required.
+- Maintain clean, scalable, secure, and well-documented code.
+Required Skills
+- Strong knowledge of modern frontend technologies such as React, Next.js, JavaScript/TypeScript, HTML, and CSS.
+- Strong backend development knowledge using technologies such as Node.js, Python, or equivalent frameworks.
+- Experience working with REST APIs, databases, authentication, and cloud/backend platforms.
+- Understanding of PostgreSQL, SQL, Supabase, Firebase, or similar platforms.
+- Experience with Git/GitHub and collaborative development workflows.
+- Good understanding of mobile application architecture and API integration.
+- Ability to test applications systematically and troubleshoot both frontend and backend issues.
+- Experience with deployment and cloud environments is preferred.
+- Familiarity with AI/LLM API integrations will be an advantage.
+We value ownership, problem-solving ability, speed of execution, attention to detail, and accountability more than simply the number of technologies listed on a résumé.
+Experience: Preferred 2–4 years of relevant full-stack software development experience. Candidates with slightly lower experience but strong technical ownership and practical project experience may also be considered.

@@ -180,3 +180,71 @@ test('AI merge keeps only skills backed by memory', () => {
   const bad = CVM.ai.merge(r.cv, 'not an object', CVM.profile.normalize(CVM.EXAMPLE_PROFILE));
   assert.deepEqual(bad.experience, r.cv.experience, 'malformed AI output falls back to the draft');
 });
+
+// ---- Real job posts (Indeed, Oct 2026; contact details removed) ----
+const fs = require('fs');
+const path = require('path');
+const JOBS = path.join(__dirname, 'fixtures', 'jobs');
+const job = (f) => fs.readFileSync(path.join(JOBS, f), 'utf8');
+
+test('real job posts: title and company are parsed', () => {
+  const expected = {
+    'game-unity-brsoftech-jaipur.txt': ['Unity Developer', 'BR Softech'],
+    'game-unity-taptik-remote.txt': ['Unity Game Developer', 'Taptik Studio'],
+    'web-fullstack-praverse-vadodara.txt': ['Full Stack Engineer', 'Praverse Tech'],
+    'web-intern-datastraw-mumbai.txt': ['Full Stack Developer Intern', 'Datastraw Technologies'],
+    'anim-blender-rigger-cbx.txt': ['Blender Rigger & Animator', 'CBX'],
+    'anim-3d-animator-riyanjaly.txt': ['3D Animator', 'Riyanjaly & Ansh Media'],
+    'smm-jainson-locks-jaipur.txt': ['Social Media Manager & Content Creator', 'Jainson Locks'],
+    'smm-content-creator-daafk-jaipur.txt': ['Content Creator & Social Media Manager', 'DA AFK Ventures']
+  };
+  for (const [f, [title, company]] of Object.entries(expected)) {
+    const a = CVM.analyzer.analyze(job(f));
+    assert.equal(a.title, title, f);
+    assert.equal(a.company, company, f);
+    const junk = a.keywords.filter((k) => /^(developer|manager|game|studio|cpu|ppo|br|afk|da|cbx)$/i.test(k.term));
+    assert.deepEqual(junk.map((k) => k.term), [], f + ' has no junk keywords');
+  }
+});
+
+test('real job posts: degree names and TODO notes are not skill evidence', () => {
+  const p = CVM.profile.normalize({
+    basics: { name: 'T' },
+    education: [{ school: 'X', degree: 'B.Tech', field: 'Electronics & Communication Engineering' }],
+    memoryNotes: 'TODO: maybe add Premiere Pro and Claude API?'
+  });
+  const corpus = CVM.tailor.profileCorpus(p);
+  assert.ok(!CVM.skillsDb.findSkills(corpus).some((s) => s.name === 'Communication'));
+  assert.ok(!/Premiere/.test(corpus));
+});
+
+test('real job posts: starter memory produces focused, placeholder-free CVs', () => {
+  const st = CVM.profile.normalizeState({ profile: CVM.STARTER_PROFILE, settings: { maxProjects: 4 } });
+  const web = CVM.tailor.run(st.profile, job('web-fullstack-praverse-vadodara.txt'), st.settings);
+  assert.equal(web.cv.order[2], 'projects', 'projects lead for a tech role');
+  assert.ok(web.cv.projects[0].name.startsWith('Arthis.Land'));
+  assert.ok(web.cv.skills.flatMap((g) => g.items).includes('SQL'), 'SQL implied by PostgreSQL');
+  assert.ok(!web.cv.skills.flatMap((g) => g.items).includes('Scriptwriting'), 'off-topic skills trimmed');
+  const smm = CVM.tailor.run(st.profile, job('smm-jainson-locks-jaipur.txt'), st.settings);
+  assert.equal(smm.cv.order[2], 'experience', 'AKverse experience leads for social media');
+  assert.ok(/social media manager/i.test(smm.cv.summary), 'social-media summary chosen');
+  assert.ok(!smm.cv.projects.some((p) => /Hexagonal/.test(p.name)), 'game project left out');
+  for (const r of [web, smm]) assert.equal(r.checks.find((c) => c.label === 'No unfinished placeholders').status, 'pass');
+});
+
+test('placeholders are caught and stripped on import', () => {
+  const r = CVM.tailor.run({ basics: { name: 'A', email: 'a@b.co' }, summary: 'Creator [ add link ] here' }, '', settings);
+  assert.equal(r.checks.find((c) => c.label === 'No unfinished placeholders').status, 'fail');
+  const p = CVM.importer.parse('Jane Doe\nAnimator\n\nEXPERIENCE\nAnimator — Studio\n• Animated [ add count ] shots\n');
+  assert.equal(p.experience[0].bullets[0], 'Animated shots');
+});
+
+test('trimOnce removes the weakest content first and stops when lean', () => {
+  const r = CVM.tailor.run(CVM.EXAMPLE_PROFILE, CVM.EXAMPLE_JOB, settings);
+  const firstBullet = r.cv.experience[0].bullets[0];
+  let n = 0;
+  while (CVM.tailor.trimOnce(r.cv) && n < 100) n++;
+  assert.ok(n > 0 && n < 100);
+  assert.equal(r.cv.experience[0].bullets[0], firstBullet, 'best bullet survives');
+  assert.ok(r.cv.experience.every((e) => e.bullets.length >= 1));
+});

@@ -1,0 +1,27 @@
+Blender Rigger & Animator — CBX (Remote)
+We're looking for a skilled Blender Rigger & Animator to help rig and animate detailed hard-surface vehicles and mechanical assets for cinematic 3D videos.
+Responsibilities
+- Rig complex hard-surface and mechanical assets in Blender
+- Create clean control systems for moving components
+- Rig rotating, folding, extending, opening and articulated parts
+- Set up constraints, parenting and mechanical relationships correctly
+- Animate mechanical sequences with realistic timing and movement
+- Create animations for components such as rotors, propellers, doors, landing systems, engines, wheels and other moving assemblies
+- Troubleshoot existing rigs and improve them where necessary
+- Keep rigs organized and easy for other artists to use
+- Prepare clean Blender files for integration into the wider production pipeline
+Requirements
+- Strong experience with Blender rigging and animation
+- Excellent understanding of constraints, drivers, parenting and rig controls
+- Experience rigging hard-surface vehicles, machinery or complex mechanical objects
+- Strong understanding of mechanical movement and how different components interact
+- Ability to create realistic and polished animation
+- Clean and organized Blender workflow
+- Able to work independently from references and technical instructions
+- Good communication and ability to deliver within agreed deadlines
+Nice to Have
+- Experience with Unreal Engine pipelines
+- Experience preparing rigs or animations for export
+- Familiarity with cinematic animation
+- Experience working with highly detailed production assets
+Experience: Rigging: 2 years (Preferred)

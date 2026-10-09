@@ -1,74 +1,241 @@
 /* Built-in profiles you can load from My Memory.
- * - STARTER: a draft of Aayush's memory from known projects. No dates or numbers are filled in —
- *   add the real ones (views, downloads, users, years) so the CV can quantify impact honestly.
+ * - STARTER: Aayush Kumar's memory, built from Aayush's four role CVs (Game, Web, Animator, Social Media).
+ *   Contact details are left out because this repo is public — import private/aayush-memory.json for the full version.
  * - EXAMPLE: a fictional person, handy for trying the app. */
 (function (root) {
   'use strict';
   var CVM = root.CVM = root.CVM || {};
 
   CVM.STARTER_PROFILE = {
-    basics: {
-      name: 'Aayush',
-      headline: 'Creative Technologist — Game Developer, 3D Artist & Content Creator',
-      email: '', phone: '', location: '',
-      links: [{ label: 'Website', url: 'https://arthis.space' }]
+    "basics": {
+      "name": "Aayush Kumar",
+      "headline": "Game Developer",
+      "email": "",
+      "phone": "",
+      "location": "Jaipur, Rajasthan, India",
+      "links": [
+        {
+          "label": "Portfolio",
+          "url": "https://arthis.land"
+        },
+        {
+          "label": "GitHub",
+          "url": "https://github.com/akversebusiness-beep"
+        },
+        {
+          "label": "YouTube",
+          "url": "https://youtube.com/@AKverseOfficial"
+        },
+        {
+          "label": "Website",
+          "url": "https://arthis.space"
+        }
+      ],
+      "headlines": [
+        "Website Developer · Backend Focused",
+        "Animator · Motion Content Creator",
+        "Social Media Manager · Content Creator",
+        "Game Developer · Unity & Unreal"
+      ]
     },
-    summary: 'Creative technologist who designs, builds and ships games, mobile apps and 3D animated content end to end. Builds HTML5 multiplayer browser games, a React Native (Expo) app with Reanimated and Skia motion, and stylised low-poly Blender dioramas, and writes and produces Hinglish comedy series for the AKverse YouTube channel. Automates creative pipelines with custom Blender add-ons and AI tooling.',
-    skills: [
-      'JavaScript', 'TypeScript', 'HTML', 'CSS', 'React Native', 'Expo', 'Reanimated', 'Skia', 'Python', 'C#', 'Unity',
-      'Blender', 'Eevee', '3D Modeling', 'Animation', 'Lighting', 'Rendering', 'Game Design', 'Game Development',
-      'Motion Graphics', 'Scriptwriting', 'Storyboarding', 'Video Editing', 'Content Creation', 'Storytelling',
-      'Generative AI', 'Prompt Engineering', 'MCP', 'Automation', 'Git'
-    ].map(function (n) { return { name: n }; }),
-    experience: [
+    "summary": "Game development student at MNIT Jaipur building gameplay systems, procedural content and custom editor tooling in Unity and Unreal Engine. Comfortable across the pipeline — C# gameplay code, 3D assets in Blender, and editor extensions that speed up level design. JEE Advanced All India Rank 8956.\n\nWeb developer at MNIT Jaipur focused on backend systems for interactive, data-driven websites. Builds React front-ends powered by Supabase and PostgreSQL with live data synchronisation, and has shipped two web projects as the backend developer. JEE Advanced All India Rank 8956.\n\nAnimator and motion content creator focused on 3D animation: rigs models from scratch and animates them, mostly in Blender, and built an automated pipeline that produces animated reels at scale. Runs the AKverse channels, publishing animation, papercraft and paper-model work. MNIT Jaipur student, JEE Advanced All India Rank 8956.\n\nContent creator and social media manager running AKverse, a multi-platform creative brand spanning YouTube and Instagram. Owns the complete content cycle — strategy, short-form video production, scripting, publishing and community growth — and combines a strong sense for engaging content with the technical skill to build automation tools that scale output. MNIT Jaipur student and JEE Advanced All India Rank 8956.",
+    "skills": [
+      "Unity",
+      "C#",
+      "Unreal Engine",
+      "Blender",
+      "Procedural Generation",
+      "Gameplay Scripting",
+      "Unity Editor Tooling",
+      "Prefab & Asset Pipelines",
+      "3D Math",
+      "React",
+      "JavaScript",
+      "HTML",
+      "CSS",
+      "Supabase",
+      "PostgreSQL",
+      "Database Schema Design",
+      "Realtime Data Sync",
+      "REST APIs",
+      "MCP",
+      "C++",
+      "Java",
+      "Python",
+      "React Native",
+      "Git",
+      "Browser DevTools",
+      "Data Structures & Algorithms",
+      "Object-Oriented Programming",
+      "3D Animation",
+      "Character Animation",
+      "Rigging",
+      "Motion Graphics",
+      "3D Modeling",
+      "Papercraft Design",
+      "Short-form Video",
+      "Content Strategy",
+      "Scriptwriting",
+      "Thumbnail Design",
+      "Channel Branding",
+      "Community Management",
+      "Audience Growth",
+      "Automation",
+      "Visual Storytelling",
+      "Content Creation",
+      "Social Media Management",
+      "Video Editing",
+      "Game Development",
+      "Full Stack Development"
+    ],
+    "experience": [
       {
-        role: 'Founder & Creator', company: 'AKverse (YouTube)', location: '', start: '', end: '', current: true,
-        tech: ['Blender', 'Eevee', 'Scriptwriting', 'Video Editing'],
-        bullets: [
-          'Write, direct and produce Hinglish comedy series including Kaleshi Family mini-dramas, Dr Lodha reels and Friends On Stand-Up sets',
-          'Produce Diorama Build shorts in which stylised Indian dioramas build themselves on screen, timed to narration',
-          'Plan series continuity, cold opens, cliffhangers and SEO packs (titles, descriptions, tags) for every episode',
-          'Built a reusable reel pipeline that turns a script into storyboard, Blender scenes and a finished vertical video'
-        ]
-      },
-      {
-        role: 'Founder & Game Developer', company: 'ARTHIS', location: '', start: '', end: '', current: true,
-        tech: ['JavaScript', 'HTML', 'CSS', 'React Native', 'Expo', 'Reanimated', 'Skia', 'Unity', 'C#'],
-        bullets: [
-          'Design and ship HTML5 multiplayer browser games on ARTHIS.space across genres such as racing, sports, puzzle and party games',
-          'Built a shared style kit and house standards for games: one cohesive rounded asset set, phone-first scaling tested at five screen sizes',
-          'Develop the ARTHIS mobile app in Expo and React Native with Reanimated and Skia motion graphics at 60 fps',
-          'Build Arthis.Land, a hex-based world game with voxel wild animals, habitats and a jungle ecology system'
+        "role": "Founder & Creator",
+        "company": "AKverse (YouTube @AKverseOfficial, Instagram)",
+        "location": "Jaipur",
+        "start": "",
+        "end": "",
+        "current": true,
+        "tech": [
+          "Blender",
+          "Short-form Video",
+          "Content Strategy",
+          "Community Management",
+          "Scriptwriting"
+        ],
+        "bullets": [
+          "Run the AKverse creative brand end to end across YouTube (@AKverseOfficial) and Instagram — strategy, production, publishing and community management",
+          "Plan, script and produce short-form video content, including papercraft, paper-model and creative builds, with consistent branding on every channel",
+          "Create and animate 3D content in Blender for the channels, turning physical papercraft builds into short-form video",
+          "Grew the AKverse audience through a regular posting schedule and active community engagement",
+          "Maintain a consistent production and posting workflow across platforms, backed by an automated reel-generation pipeline"
         ]
       }
     ],
-    projects: [
+    "projects": [
       {
-        name: 'Blender Animation Add-ons', role: 'Creator', tech: ['Blender', 'Python', 'Animation', 'Automation'],
-        bullets: [
-          'Built custom Blender add-ons including Camera Animator Pro, Object Animator Pro, Animated Text, LipSync and a lighting toolkit',
-          'Automated shot setup, camera moves and lip-sync so a full reel can be rendered headlessly from a script'
+        "name": "Arthis.Land — Interactive Creative Showcase Platform",
+        "role": "Backend Developer",
+        "link": "https://arthis.land",
+        "start": "",
+        "end": "",
+        "tech": [
+          "React",
+          "JavaScript",
+          "Supabase",
+          "PostgreSQL",
+          "HTML",
+          "CSS",
+          "Unity WebGL"
+        ],
+        "bullets": [
+          "Designed and built the Supabase (PostgreSQL) backend — a schema covering 750+ bricks plus a shared defaults table — for a website built around a live, explorable wall of games and creative work",
+          "Re-architected the site to be fully backend-driven: every brick title, colour, image and metadata field now comes from the database instead of hard-coded front-end values",
+          "Built a live-sync layer that merges database records into the React render in place, keyed on stable IDs, so an edit updates the exact brick with zero duplicates",
+          "Implemented a colour-theming pipeline where a single hex value from the database drives each brick's fill, frame tint and outline",
+          "Wired support for embedding playable Unity WebGL builds directly in the showcase wall"
         ]
       },
       {
-        name: 'AI-Driven 3D Diorama Pipeline', role: 'Creator', tech: ['Blender', 'MCP', 'Generative AI', '3D Modeling'],
-        bullets: [
-          'Drive Blender through MCP with AI agents to build low-poly buildings, vehicles, trees and props in a consistent house style',
-          'Added automated QA: backups, floating-part and overlap checks, and staged Eevee check renders before each delivery'
+        "name": "Hexagonal Tile Game",
+        "role": "Game Developer (Unity, C#)",
+        "link": "",
+        "start": "",
+        "end": "",
+        "tech": [
+          "Unity",
+          "C#",
+          "Procedural Generation",
+          "Unity Editor Tooling",
+          "Blender",
+          "3D Math"
+        ],
+        "bullets": [
+          "Built HexaBed, a procedural terrain generator in Unity (C#) that assembles 160+ hexagonal tiles into a coherent, height-varied playable world",
+          "Engineered a procedural road generator that traces paths across the hex grid and auto-selects the correct asset — straight, turn, ramp or pit — from neighbouring tile heights and direction",
+          "Created HexTileEditor, a custom Unity editor panel that lets designers author and regenerate the world visually with no code",
+          "Solved asset-placement problems with pivot compensation, 60-degree rotation snapping on the hex grid and bounds-based alignment so prefabs sit flush on every tile",
+          "Integrated and positioned 3D assets within the hex-tile world for real-time scenes"
         ]
       },
       {
-        name: 'ARTHIS Low-Poly Vehicle & Asset Library', role: 'Creator', tech: ['Blender', '3D Modeling', 'Texturing'],
-        bullets: [
-          'Modelled a library of Indian trucks, pickups, autos, tractors, shops and props in a faceted low-poly style for reuse across dioramas and games'
+        "name": "Hustiq — Automated Reel Animation Pipeline",
+        "role": "Creator",
+        "link": "",
+        "start": "",
+        "end": "",
+        "tech": [
+          "Automation",
+          "Blender",
+          "3D Animation",
+          "Motion Graphics",
+          "Scripting"
+        ],
+        "bullets": [
+          "Built an automation pipeline that generates animated short-form videos from a reusable template, cutting the manual work of producing each reel",
+          "Set it up so new reels come from the template without re-animating from scratch, supporting a consistent posting schedule",
+          "Documented the workflow end to end and recorded a proof video showing the pipeline in action"
+        ]
+      },
+      {
+        "name": "3D Animation Showreel — Rigging & Character Work",
+        "role": "3D Animator",
+        "link": "",
+        "start": "",
+        "end": "",
+        "tech": [
+          "Blender",
+          "Rigging",
+          "Character Animation",
+          "3D Animation"
+        ],
+        "bullets": [
+          "Rigged 3D models from scratch in Blender and animated them with a focus on character movement, weight and timing",
+          "Published the rigged models on Sketchfab and cut the results together into a showreel"
+        ]
+      },
+      {
+        "name": "Arthis.Space",
+        "role": "Backend Developer",
+        "link": "https://arthis.space",
+        "start": "",
+        "end": "",
+        "tech": [],
+        "bullets": [
+          "Built the backend for Arthis.Space as the project's backend developer"
         ]
       }
     ],
-    education: [],
-    certifications: [],
-    achievements: [],
-    languages: ['English', 'Hindi'],
-    memoryNotes: 'TODO: add real numbers — subscribers, views, games shipped, players, app downloads — plus dates for each role and your education.'
+    "education": [
+      {
+        "school": "Malaviya National Institute of Technology (MNIT), Jaipur",
+        "degree": "B.Tech",
+        "field": "Electronics & Communication Engineering (ECE)",
+        "start": "2022",
+        "end": "2026",
+        "grade": "JEE Advanced — All India Rank 8956 · JEE Main — 98.9 percentile",
+        "details": []
+      },
+      {
+        "school": "Jayshree Periwal High School (JPHS), Jaipur",
+        "degree": "Class XII",
+        "field": "",
+        "start": "",
+        "end": "2022",
+        "grade": "Class XII — 86.7% · Class X — 90.4%",
+        "details": []
+      }
+    ],
+    "certifications": [],
+    "achievements": [
+      "JEE Advanced 2022 — All India Rank 8956",
+      "JEE Main — 98.9 percentile"
+    ],
+    "languages": [
+      "English",
+      "Hindi"
+    ],
+    "memoryNotes": "TODO: add your email and phone in Basics (left out of this public file on purpose).\nTODO: add start date for AKverse, plus subscriber / follower / view counts (numbers make the strongest bullets).\nTODO: add your Instagram handle, third platform, showreel, Sketchfab, proof-video and documentation links.\nTODO: describe Arthis.Space (what it is, what you built, the stack).\nTODO: list the tools you actually use for social media and editing (Canva? CapCut? Premiere Pro? After Effects?).\nTODO: confirm B.Tech status — completed in 2026 or still in progress?\nTODO (only if true): ARTHIS HTML5 multiplayer browser games, ARTHIS mobile app (Expo / React Native), custom Blender add-ons, Hustiq website link."
   };
 
   CVM.EXAMPLE_PROFILE = {

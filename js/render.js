@@ -22,39 +22,48 @@
     if (b.headline) h.push('<p class="cv-headline">' + E(b.headline) + '</p>');
     h.push('<p class="cv-contact">' + contactLine(b) + '</p></header>');
 
-    if (cv.summary) h.push(section('Summary', '<p>' + E(cv.summary) + '</p>'));
-    if (cv.skills.length) {
-      h.push(section('Skills', cv.skills.map(function (g) {
-        return '<p class="cv-skill"><strong>' + E(g.group) + ':</strong> ' + E(g.items.join(', ')) + '</p>';
-      }).join('')));
-    }
-    if (cv.experience.length) {
-      h.push(section('Experience', cv.experience.map(function (e) {
-        return '<div class="cv-item"><p class="cv-item-head"><strong>' + E(e.role) + '</strong>' + (e.company ? ' — ' + E(e.company) : '') +
-          (e.location ? ', ' + E(e.location) : '') + (e.dates ? '<span class="cv-dates">' + E(e.dates) + '</span>' : '') + '</p>' + list(e.bullets) + '</div>';
-      }).join('')));
-    }
-    if (cv.projects.length) {
-      h.push(section('Projects', cv.projects.map(function (p) {
-        var meta = [p.role, p.tech.length ? p.tech.join(', ') : ''].filter(Boolean).join(' | ');
-        return '<div class="cv-item"><p class="cv-item-head"><strong>' + E(p.name) + '</strong>' + (meta ? ' — ' + E(meta) : '') +
-          (p.dates ? '<span class="cv-dates">' + E(p.dates) + '</span>' : '') + '</p>' +
-          (p.link ? '<p class="cv-link">' + E(linkText(p.link)) + '</p>' : '') + list(p.bullets) + '</div>';
-      }).join('')));
-    }
-    if (cv.education.length) {
-      h.push(section('Education', cv.education.map(function (e) {
-        return '<div class="cv-item"><p class="cv-item-head"><strong>' + E(e.degree || e.school) + '</strong>' + (e.degree && e.school ? ' — ' + E(e.school) : '') +
-          (e.dates ? '<span class="cv-dates">' + E(e.dates) + '</span>' : '') + '</p>' + (e.grade ? '<p>' + E(e.grade) + '</p>' : '') + list(e.details) + '</div>';
-      }).join('')));
-    }
-    if (cv.certifications.length) {
-      h.push(section('Certifications', list(cv.certifications.map(function (c) { return [c.name, c.issuer, c.date].filter(Boolean).join(' — '); }))));
-    }
-    if (cv.achievements.length) h.push(section('Achievements', list(cv.achievements)));
-    if (cv.languages.length) h.push(section('Languages', '<p>' + E(cv.languages.join(', ')) + '</p>'));
+    var parts = {
+      summary: function () { return cv.summary ? section('Summary', '<p>' + E(cv.summary) + '</p>') : ''; },
+      skills: function () {
+        return cv.skills.length ? section('Skills', cv.skills.map(function (g) {
+          return '<p class="cv-skill"><strong>' + E(g.group) + ':</strong> ' + E(g.items.join(', ')) + '</p>';
+        }).join('')) : '';
+      },
+      experience: function () {
+        return cv.experience.length ? section('Experience', cv.experience.map(function (e) {
+          return '<div class="cv-item"><p class="cv-item-head"><strong>' + E(e.role) + '</strong>' + (e.company ? ' — ' + E(e.company) : '') +
+            (e.location ? ', ' + E(e.location) : '') + (e.dates ? '<span class="cv-dates">' + E(e.dates) + '</span>' : '') + '</p>' + list(e.bullets) + '</div>';
+        }).join('')) : '';
+      },
+      projects: function () {
+        return cv.projects.length ? section('Projects', cv.projects.map(function (p) {
+          var meta = [p.role, p.tech.length ? p.tech.join(', ') : ''].filter(Boolean).join(' | ');
+          return '<div class="cv-item"><p class="cv-item-head"><strong>' + E(p.name) + '</strong>' + (meta ? ' — ' + E(meta) : '') +
+            (p.dates ? '<span class="cv-dates">' + E(p.dates) + '</span>' : '') + '</p>' +
+            (p.link ? '<p class="cv-link">' + E(linkText(p.link)) + '</p>' : '') + list(p.bullets) + '</div>';
+        }).join('')) : '';
+      },
+      education: function () {
+        return cv.education.length ? section('Education', cv.education.map(function (e) {
+          return '<div class="cv-item"><p class="cv-item-head"><strong>' + E(e.degree || e.school) + '</strong>' + (e.degree && e.school ? ' — ' + E(e.school) : '') +
+            (e.dates ? '<span class="cv-dates">' + E(e.dates) + '</span>' : '') + '</p>' + (e.grade ? '<p>' + E(e.grade) + '</p>' : '') + list(e.details) + '</div>';
+        }).join('')) : '';
+      },
+      certifications: function () { return cv.certifications.length ? section('Certifications', list(cv.certifications.map(function (c) { return [c.name, c.issuer, c.date].filter(Boolean).join(' — '); }))) : ''; },
+      achievements: function () { return cv.achievements.length ? section('Achievements', list(cv.achievements)) : ''; },
+      languages: function () { return cv.languages.length ? section('Languages', '<p>' + E(cv.languages.join(', ')) + '</p>') : ''; }
+    };
+    order(cv).forEach(function (k) { if (parts[k]) h.push(parts[k]()); });
     h.push('</article>');
     return h.join('');
+  }
+
+  var DEFAULT_ORDER = ['summary', 'skills', 'experience', 'projects', 'education', 'certifications', 'achievements', 'languages'];
+  /** Section order for a CV (validated: unknown keys dropped, missing ones appended). */
+  function order(cv) {
+    var o = Array.isArray(cv && cv.order) ? cv.order.filter(function (k) { return DEFAULT_ORDER.indexOf(k) >= 0; }) : [];
+    DEFAULT_ORDER.forEach(function (k) { if (o.indexOf(k) < 0) o.push(k); });
+    return o;
   }
 
   function section(title, body) { return '<section class="cv-sec"><h2>' + E(title) + '</h2>' + body + '</section>'; }
@@ -89,29 +98,35 @@
     md.push('# ' + (b.name || 'Your Name'));
     if (b.headline) md.push('**' + b.headline + '**');
     md.push([b.email, b.phone, b.location].concat(b.links.map(function (l) { return l.url; })).filter(Boolean).join(' | '));
-    if (cv.summary) md.push('## Summary', cv.summary);
-    if (cv.skills.length) md.push('## Skills', cv.skills.map(function (g) { return '- **' + g.group + ':** ' + g.items.join(', '); }).join('\n'));
-    if (cv.experience.length) {
-      md.push('## Experience');
-      cv.experience.forEach(function (e) {
-        md.push('### ' + e.role + (e.company ? ' — ' + e.company : '') + (e.location ? ', ' + e.location : '') + (e.dates ? '\n_' + e.dates + '_' : ''));
-        if (e.bullets.length) md.push(e.bullets.map(function (x) { return '- ' + x; }).join('\n'));
-      });
-    }
-    if (cv.projects.length) {
-      md.push('## Projects');
-      cv.projects.forEach(function (p) {
-        md.push('### ' + p.name + (p.role ? ' — ' + p.role : '') + (p.tech.length ? '\n_' + p.tech.join(', ') + '_' : '') + (p.link ? '\n' + p.link : ''));
-        if (p.bullets.length) md.push(p.bullets.map(function (x) { return '- ' + x; }).join('\n'));
-      });
-    }
-    if (cv.education.length) {
-      md.push('## Education');
-      cv.education.forEach(function (e) { md.push('### ' + (e.degree || e.school) + (e.degree && e.school ? ' — ' + e.school : '') + (e.dates ? '\n_' + e.dates + '_' : '') + (e.grade ? '\n' + e.grade : '')); });
-    }
-    if (cv.certifications.length) md.push('## Certifications', cv.certifications.map(function (c) { return '- ' + [c.name, c.issuer, c.date].filter(Boolean).join(' — '); }).join('\n'));
-    if (cv.achievements.length) md.push('## Achievements', cv.achievements.map(function (a) { return '- ' + a; }).join('\n'));
-    if (cv.languages.length) md.push('## Languages', cv.languages.join(', '));
+    var parts = {
+      summary: function () { if (cv.summary) md.push('## Summary', cv.summary); },
+      skills: function () { if (cv.skills.length) md.push('## Skills', cv.skills.map(function (g) { return '- **' + g.group + ':** ' + g.items.join(', '); }).join('\n')); },
+      experience: function () {
+        if (!cv.experience.length) return;
+        md.push('## Experience');
+        cv.experience.forEach(function (e) {
+          md.push('### ' + e.role + (e.company ? ' — ' + e.company : '') + (e.location ? ', ' + e.location : '') + (e.dates ? '\n_' + e.dates + '_' : ''));
+          if (e.bullets.length) md.push(e.bullets.map(function (x) { return '- ' + x; }).join('\n'));
+        });
+      },
+      projects: function () {
+        if (!cv.projects.length) return;
+        md.push('## Projects');
+        cv.projects.forEach(function (p) {
+          md.push('### ' + p.name + (p.role ? ' — ' + p.role : '') + (p.tech.length ? '\n_' + p.tech.join(', ') + '_' : '') + (p.link ? '\n' + p.link : ''));
+          if (p.bullets.length) md.push(p.bullets.map(function (x) { return '- ' + x; }).join('\n'));
+        });
+      },
+      education: function () {
+        if (!cv.education.length) return;
+        md.push('## Education');
+        cv.education.forEach(function (e) { md.push('### ' + (e.degree || e.school) + (e.degree && e.school ? ' — ' + e.school : '') + (e.dates ? '\n_' + e.dates + '_' : '') + (e.grade ? '\n' + e.grade : '')); });
+      },
+      certifications: function () { if (cv.certifications.length) md.push('## Certifications', cv.certifications.map(function (c) { return '- ' + [c.name, c.issuer, c.date].filter(Boolean).join(' — '); }).join('\n')); },
+      achievements: function () { if (cv.achievements.length) md.push('## Achievements', cv.achievements.map(function (a) { return '- ' + a; }).join('\n')); },
+      languages: function () { if (cv.languages.length) md.push('## Languages', cv.languages.join(', ')); }
+    };
+    order(cv).forEach(function (k) { if (parts[k]) parts[k](); });
     return md.join('\n\n') + '\n';
   }
 
@@ -156,5 +171,5 @@
     return '#';
   }
 
-  CVM.render = { cvHtml: cvHtml, cvCss: cvCss, cvDocument: cvDocument, markdown: markdown, text: function (cv) { return CVM.tailor.cvText(cv); }, portfolio: portfolio, safeUrl: safeUrl };
+  CVM.render = { order: order, cvHtml: cvHtml, cvCss: cvCss, cvDocument: cvDocument, markdown: markdown, text: function (cv) { return CVM.tailor.cvText(cv); }, portfolio: portfolio, safeUrl: safeUrl };
 })(typeof window !== 'undefined' ? window : globalThis);

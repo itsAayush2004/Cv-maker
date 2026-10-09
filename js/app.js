@@ -135,7 +135,8 @@
     var p = state.profile, h = [];
     var b = p.basics;
     h.push(section('basics', 'Basics & contact', '', [
-      '<div class="grid2">' + fieldHtml('basics.name', 'Full name', 'text', b.name) + fieldHtml('basics.headline', 'Headline / current title', 'text', b.headline) + '</div>',
+      '<div class="grid2">' + fieldHtml('basics.name', 'Full name', 'text', b.name) + fieldHtml('basics.headline', 'Main headline / title', 'text', b.headline) + '</div>',
+      fieldHtml('basics.headlines', 'Other accurate headlines, one per line (e.g. Website Developer · Backend Focused). The best fit is picked per job.', 'lines', b.headlines, 3),
       '<div class="grid3">' + fieldHtml('basics.email', 'Email', 'email', b.email) + fieldHtml('basics.phone', 'Phone', 'text', b.phone) + fieldHtml('basics.location', 'Location (City, Country)', 'text', b.location) + '</div>',
       '<div><div class="field"><span>Links (LinkedIn, GitHub, portfolio, YouTube…)</span></div>' +
         b.links.map(function (l, i) {
@@ -145,7 +146,7 @@
     ].join('')));
 
     h.push(section('summary', 'Professional summary', p.summary ? U.words(p.summary).length + ' words' : '',
-      fieldHtml('summary', 'Your summary in your own words (the tailored CV reuses its strongest sentence)', 'textarea', p.summary, 4)));
+      fieldHtml('summary', 'Your summary in your own words. Tip: write one per target role, separated by a blank line — the best match is used for each job.', 'textarea', p.summary, 8)));
 
     h.push(section('skills', 'Skills', p.skills.length + ' skills',
       fieldHtml('skills', 'All your skills, tools and technologies — comma or newline separated. Be exhaustive; only relevant ones are shown per job.', 'skills', p.skills.map(function (s) { return s.name; }).join(', '), 4) +
@@ -174,7 +175,7 @@
     h.push(section('languages', 'Languages', p.languages.length ? String(p.languages.length) : '',
       fieldHtml('languages', 'Comma separated, e.g. English (Fluent), Hindi (Native)', 'csv', p.languages)));
     h.push(section('notes', 'Extra memory (anything else about you)', p.memoryNotes ? U.words(p.memoryNotes).length + ' words' : '',
-      fieldHtml('memoryNotes', 'Free notes: side gigs, numbers, tools you know, stories, goals. Skills mentioned here count as evidence when matching jobs.', 'textarea', p.memoryNotes, 6)));
+      fieldHtml('memoryNotes', 'Free notes: side gigs, numbers, tools you know, stories, goals. Skills mentioned here count as evidence when matching jobs — except lines starting with TODO or ?, which are reminders only.', 'textarea', p.memoryNotes, 6)));
 
     $('#memoryForm').innerHTML = h.join('');
     renderTips();
@@ -199,6 +200,8 @@
       var q = all.filter(function (x) { return CVM.tailor.METRIC_RE.test(x); }).length;
       if (all.length && q / all.length < 0.4) tips.push('Only ' + q + ' of ' + all.length + ' experience bullets have numbers. Add real metrics (users, %, time, revenue, views).');
       if (p.experience.some(function (e) { return !e.start; })) tips.push('Some roles have no start date — ATS systems use dates to compute years of experience.');
+      var todos = (p.memoryNotes.match(/^\s*TODO/gim) || []).length;
+      if (todos) tips.push('You have ' + todos + ' TODO note' + (todos > 1 ? 's' : '') + ' in “Extra memory” — filling them in will raise your scores.');
     }
     $('#memoryTips').innerHTML = tips.length ? '<div class="tip">💡 ' + tips[0] + '</div>' : '';
   }
@@ -288,8 +291,37 @@
   function fact(label, value) { return '<div class="fact"><b>' + E(label) + '</b>' + E(value) + '</div>'; }
 
   // ---------------------------------------------------------------- build & CV view
+  /** Trim the weakest content until the rendered CV fits on one page (measured in the real layout). */
+  function fitToOnePage(cv) {
+    if (!state.settings.onePage) return { trimmed: 0 };
+    var host = doc.createElement('div');
+    host.style.cssText = 'position:absolute;left:-10000px;top:0;visibility:hidden;';
+    var letter = state.settings.pageSize === 'Letter';
+    host.innerHTML = '<div style="width:' + (letter ? 184 : 178) + 'mm;background:#fff"></div><div style="height:' + (letter ? 251 : 269) + 'mm"></div>';
+    doc.body.appendChild(host);
+    var box = host.firstChild, limit = host.lastChild.offsetHeight, trimmed = 0;
+    try {
+      ensureCvStyle();
+      for (var i = 0; i < 40; i++) {
+        box.innerHTML = CVM.render.cvHtml(cv, state.settings.template);
+        if (box.offsetHeight <= limit || !CVM.tailor.trimOnce(cv)) break;
+        trimmed++;
+      }
+    } finally { host.remove(); }
+    return { trimmed: trimmed };
+  }
+
+  function ensureCvStyle() {
+    var style = doc.getElementById('cvStyle');
+    if (!style) { style = doc.createElement('style'); style.id = 'cvStyle'; doc.head.appendChild(style); }
+    style.textContent = CVM.render.cvCss(state.settings.pageSize).replace(/@page\{[^}]*\}/, '');
+  }
+
   function build(switchTab) {
     var r = CVM.tailor.run(state.profile, state.job.text, state.settings);
+    var fit = fitToOnePage(r.cv);
+    if (fit.trimmed) r = CVM.tailor.evaluate(r.cv, r.analysis, state.profile, state.settings);
+    r.cv.meta.trimmed = fit.trimmed;
     current = r;
     cvDirty = false;
     lastResearch = '';
@@ -313,9 +345,7 @@
   function renderPreview() {
     var page = $('#cvPreview');
     page.classList.toggle('letter', state.settings.pageSize === 'Letter');
-    var style = doc.getElementById('cvStyle');
-    if (!style) { style = doc.createElement('style'); style.id = 'cvStyle'; doc.head.appendChild(style); }
-    style.textContent = CVM.render.cvCss(state.settings.pageSize).replace(/@page\{[^}]*\}/, '');
+    ensureCvStyle();
     page.innerHTML = CVM.render.cvHtml(current.cv, state.settings.template);
     $$('.seg-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.template === state.settings.template); });
   }
@@ -328,6 +358,7 @@
       (a.empty ? 'No job pasted — this is your general CV. Paste a job in step 2 for a tailored one.' : 'Keyword match ' + m.coverage + '% · must-haves ' + m.mustHave.got + '/' + m.mustHave.total) + '</span></div></div>');
     if (!a.empty) h.push('<div class="bar" title="Keyword coverage"><i style="width:' + m.coverage + '%"></i></div>');
     if (r.cv.meta.titleNote) h.push('<p class="muted" style="margin:0">' + E(r.cv.meta.titleNote) + '</p>');
+    if (r.cv.meta.trimmed) h.push('<p class="muted" style="margin:0">Fitted to one page: left out ' + r.cv.meta.trimmed + ' lower-relevance line' + (r.cv.meta.trimmed > 1 ? 's' : '') + '. Turn off in Settings for a longer CV.</p>');
 
     h.push('<div><label class="field"><span>Headline</span><input id="cvHeadline" maxlength="140" value="' + E(r.cv.basics.headline) + '"></label></div>');
     h.push('<div><label class="field"><span>Summary <span class="hint">edit freely — score updates live</span></span><textarea id="cvSummary" rows="6" maxlength="1200">' + E(r.cv.summary) + '</textarea></label></div>');
@@ -499,6 +530,7 @@
         '<label class="field"><span>Max projects</span><input type="number" min="0" max="8" data-setting="maxProjects" value="' + s.maxProjects + '"></label></div>' +
         '<label class="field check"><input type="checkbox" data-setting="mirrorTitle"' + (s.mirrorTitle ? ' checked' : '') + '> Mirror the job title in my headline when my memory supports it</label>' +
         '<label class="field check"><input type="checkbox" data-setting="includeProjects"' + (s.includeProjects ? ' checked' : '') + '> Include a Projects section</label>' +
+        '<label class="field check"><input type="checkbox" data-setting="onePage"' + (s.onePage ? ' checked' : '') + '> Fit the CV on one page (recommended for students and under 5 years)</label>' +
       '</div>' +
       '<div class="card"><h3>AI mode (optional)</h3><p class="muted">Off by default — everything works offline. With your own Anthropic API key, CV Forge can research the company on the web and rewrite your CV in the job\'s language. It is instructed to use only facts from your memory, and its skills are filtered against your memory. The key is stored only in this browser and sent only to Anthropic.</p>' +
         '<label class="field check"><input type="checkbox" data-setting="aiEnabled"' + (s.aiEnabled ? ' checked' : '') + '> Enable AI mode</label>' +
@@ -521,7 +553,7 @@
     var v = typeof d[k] === 'boolean' ? el.checked : typeof d[k] === 'number' ? U.clamp(parseInt(el.value, 10), 0, 10) : el.value;
     state.settings[k] = v;
     state = Object.assign(state, { settings: CVM.profile.normalizeState(state).settings });
-    cvDirty = cvDirty || ['maxBulletsRecent', 'maxBulletsOlder', 'maxProjects', 'mirrorTitle', 'includeProjects'].indexOf(k) >= 0;
+    cvDirty = cvDirty || ['maxBulletsRecent', 'maxBulletsOlder', 'maxProjects', 'mirrorTitle', 'includeProjects', 'onePage', 'pageSize', 'template'].indexOf(k) >= 0;
     saveSoon();
   }
 

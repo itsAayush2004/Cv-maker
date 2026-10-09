@@ -14,7 +14,7 @@
 
   function emptyProfile() {
     return {
-      basics: { name: '', headline: '', email: '', phone: '', location: '', links: [] },
+      basics: { name: '', headline: '', headlines: [], email: '', phone: '', location: '', links: [] },
       summary: '',
       skills: [],
       experience: [],
@@ -93,7 +93,7 @@
       field: U.str(e.field || e.area, 140).trim(),
       start: U.str(e.start || e.startDate, 30).trim(),
       end: U.str(e.end || e.endDate, 30).trim(),
-      grade: U.str(e.grade || e.score || e.gpa, 40).trim(),
+      grade: U.str(e.grade || e.score || e.gpa, 160).trim(),
       details: bulletList(e.details || e.courses)
     };
     return out.school || out.degree ? out : null;
@@ -126,6 +126,7 @@
     var b = input.basics || {};
     p.basics.name = U.str(b.name, 120).trim();
     p.basics.headline = U.str(b.headline || b.label, 160).trim();
+    p.basics.headlines = strList(b.headlines, 120).slice(0, 12);
     p.basics.email = U.str(b.email, 160).trim();
     p.basics.phone = U.str(b.phone, 60).trim();
     var loc = b.location;
@@ -168,7 +169,7 @@
   function defaultSettings() {
     return {
       pageSize: 'A4', template: 'classic', maxBulletsRecent: 5, maxBulletsOlder: 3, maxProjects: 3,
-      mirrorTitle: true, includeProjects: true, aiEnabled: false, aiModel: 'claude-opus-5-5', aiResearch: true
+      mirrorTitle: true, includeProjects: true, onePage: true, aiEnabled: false, aiModel: 'claude-opus-5-5', aiResearch: true
     };
   }
 

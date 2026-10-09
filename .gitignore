@@ -1,3 +1,5 @@
 node_modules/
 *.log
 .DS_Store
+# Personal data (phone, email, full memory) — never commit to the public repo
+private/

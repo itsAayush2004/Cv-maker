@@ -1,0 +1,18 @@
+Full Stack Developer Intern (AI & Automations - PPO) — Datastraw Technologies
+About the Role
+We are looking for a builder. From week one, you will be working on real-world AI products, intelligent automations, and scalable applications that directly impact live business operations.
+Must-Haves:
+- Building AI Agents & Automations: Hooking up n8n, OpenAI/Claude APIs, and webhooks to automate complex workflows.
+- Full-Stack Development: Shipping internal tools, dashboards, and modern web apps using React (or Vue) backed by Supabase and PostgreSQL.
+- Data Pipelines: Setting up ETL workflows to collect, process, and make sense of raw business data.
+- AI-Assisted Coding: Using tools like ChatGPT and Claude to code faster, debug smarter, and own projects from planning all the way to deployment.
+- You know your way around at least one programming language (Such as JavaScript or Python).
+- You understand how APIs, databases, and modern web applications work.
+- A relentless problem-solving mindset.
+- The ability to take ownership of a task and see it through independently.
+Good-to-Haves (Bonus points for these):
+- A portfolio of side projects or active GitHub repos.
+- Experience with React, Vue, Supabase, Firebase, or PostgreSQL.
+- Exposure to automation platforms like n8n, Make, or Zapier.
+- An understanding of basic data dashboards (Looker Studio, Power BI) or how e-commerce operations work.
+The Tech Stack You'll Work With: Supabase, React/Vue, n8n, PostgreSQL, REST APIs, Webhooks, Looker Studio, Claude API, ETL Pipelines, and heavy use of AI dev tools.

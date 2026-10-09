@@ -51,6 +51,25 @@
     return out;
   }
 
+  // Words that are never useful keywords on their own (they are covered by the job title keyword).
+  var GENERIC = ('developer developers engineer engineers manager managers designer designers artist artists animator animators rigger ' +
+    'creator creators intern interns internship game games studio studios remote hybrid onsite fresher freshers experience years year ' +
+    'senior junior lead trainee executive specialist associate role position job team company pvt ltd private limited llp inc ' +
+    'cpu gpu ppo hr ctc lpa pay benefits salary stipend apply email contact work location india').split(/\s+/);
+  var GENERICSET = Object.create(null);
+  GENERIC.forEach(function (w) { GENERICSET[w] = 1; });
+
+  /** "Unity Developer — BR Softech, Jaipur (Remote)" → { title: "Unity Developer", rest: "BR Softech" } */
+  function splitTitle(raw) {
+    var t = U.str(raw).replace(/[*_#]+/g, ' ').replace(/\s*\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+    var parts = t.split(/\s+[—–|]\s+|\s+-\s+|\s+@\s+|\s+at\s+(?=[A-Z])/);
+    var title = parts[0].replace(/\s*\((?:remote|hybrid|on-?site|fresher|full[\s-]?time|part[\s-]?time|internship|contract|wfh|work from home)[^)]*\)?\s*$/i, '')
+      .replace(/\s*[-–—(]?\s*\d+\s*[-–+]?\s*\d*\+?\s*(years?|yrs?)(\s+(of\s+)?experience)?\)?\s*$/i, '').trim();
+    var rest = parts.slice(1).join(' ').replace(/\(.*?\)/g, '').split(',')[0].trim();
+    if (/^\d|years?|experience|remote|fresher/i.test(rest)) rest = '';
+    return { title: title, rest: rest };
+  }
+
   function guessTitle(text) {
     var m = text.match(/(?:job\s*title|position|role)\s*[:\-–]\s*([^\n]{3,90})/i);
     if (m) return m[1].trim();
@@ -58,7 +77,7 @@
     if (m && /(engineer|developer|designer|manager|analyst|artist|editor|scientist|specialist|lead|architect|consultant|writer|producer|animator|creator|marketer|director|intern|officer|executive|coordinator|administrator|strategist)/i.test(m[1])) return m[1].trim();
     var lines = text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
     for (var i = 0; i < Math.min(lines.length, 5); i++) {
-      var l = lines[i].replace(/^[#*\s]+|[*#\s]+$/g, '');
+      var l = lines[i].replace(/^[#*_\s]+|[*#_\s]+$/g, '').replace(/\s*\([^)]*\)/g, ' ');
       if (l.length > 2 && l.length < 80 && /(engineer|developer|designer|manager|analyst|artist|editor|scientist|specialist|lead|architect|consultant|writer|producer|animator|creator|marketer|director|intern|officer|executive|coordinator|administrator|strategist|technician|associate)/i.test(l)) {
         return l.split(/\s+[-–|@]\s+|\s+at\s+/i)[0].trim();
       }
@@ -68,6 +87,7 @@
 
   function guessCompany(text) {
     var m = text.match(/(?:company|employer|organi[sz]ation)\s*[:\-–]\s*([^\n]{2,60})/i)
+      || text.match(/(?:^|\n)\s*\*?([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,3})\*?\s+(?:is|are)\s+(?:looking|hiring|seeking)/)
       || text.match(/\babout\s+([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,3})\s*[:\n]/)
       || text.match(/\b(?:at|join)\s+([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,3})(?:,|\s+(?:is|we|as|and)\b|!|\.)/)
       || text.split('\n')[0].match(/\s(?:at|@|[-–|])\s+([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,3})\s*$/);
@@ -111,17 +131,19 @@
     var counts = Object.create(null), sectionOf = Object.create(null);
     lines.forEach(function (l) {
       if (l.section === 'benefits' || l.section === 'about') return;
-      var tokens = U.words(l.text).map(function (w) { return w.replace(/[.'-]+$/, ''); });
+      l.text.split(/[,;:()|&\/•.!?]+|\s[-–—]\s/).forEach(function (seg) {
+      var tokens = U.words(seg).map(function (w) { return w.replace(/[.'-]+$/, ''); });
       for (var n = 2; n <= 3; n++) {
         for (var i = 0; i + n <= tokens.length; i++) {
           var gram = tokens.slice(i, i + n);
-          if (STOPSET[gram[0]] || STOPSET[gram[n - 1]] || gram.some(function (w) { return w.length < 2 || /^\d+$/.test(w); })) continue;
+          if (STOPSET[gram[0]] || STOPSET[gram[n - 1]] || gram.some(function (w) { return w.length < 2 || /^\d+$/.test(w) || GENERICSET[w]; })) continue;
           if (gram.filter(function (w) { return STOPSET[w]; }).length > 0) continue;
           var p = gram.join(' ');
           counts[p] = (counts[p] || 0) + 1;
           if (!sectionOf[p] || l.section === 'required') sectionOf[p] = l.section;
         }
       }
+      });
     });
     var out = [];
     Object.keys(counts).forEach(function (p) {
@@ -137,7 +159,8 @@
   }
 
   /** Capitalised product/tool names not in the dictionary (e.g. "Snowplow", "Contentful"). */
-  function extractProperNouns(lines, knownLower, company) {
+  function extractProperNouns(lines, knownLower, company, title, phrases) {
+    var titleLower = U.words(title);
     var counts = Object.create(null), sectionOf = Object.create(null);
     var companyLower = U.str(company).toLowerCase();
     lines.forEach(function (l) {
@@ -150,6 +173,8 @@
         first = false;
         if (atStart) continue; // sentence-initial capital tells us nothing
         var lw = w.toLowerCase();
+        if (GENERICSET[lw] || titleLower.indexOf(lw) >= 0 || (phrases || []).some(function (p) { return p.term.split(' ').indexOf(lw) >= 0; })) continue;
+        if (w.length <= 2) continue;
         if (STOPSET[lw] || knownLower[lw] || lw === companyLower || /^(i|we|you|our|the|this|join|apply|equal|monday|friday|january|december)$/.test(lw)) continue;
         counts[w] = (counts[w] || 0) + 1;
         if (!sectionOf[w] || l.section === 'required') sectionOf[w] = l.section;
@@ -169,14 +194,17 @@
     var text = cleanText(jdText);
     var result = {
       title: '', company: '', seniority: '', yearsRequired: null, education: '',
-      keywords: [], hardSkills: [], softSkills: [], responsibilities: [], wordCount: 0, empty: true
+      keywords: [], hardSkills: [], softSkills: [], responsibilities: [], wordCount: 0, empty: true, rawText: ''
     };
     if (text.trim().length < 20) return result;
     result.empty = false;
+    result.rawText = text;
     result.wordCount = U.words(text).length;
     var lines = splitSections(text);
-    result.title = guessTitle(text);
+    var split = splitTitle(guessTitle(text));
+    result.title = split.title;
     result.company = guessCompany(text);
+    if (split.rest && (!result.company || result.company.length > split.rest.length + 15 || text.indexOf(result.company) > 400)) result.company = split.rest;
     result.seniority = seniorityOf(result.title, text);
     result.yearsRequired = yearsRequired(text);
     result.education = educationReq(text);
@@ -217,10 +245,11 @@
       return { text: t, section: l.section };
     });
 
-    extractPhrases(blanked, knownLower).forEach(function (p) {
+    var phrases = extractPhrases(blanked, knownLower);
+    phrases.forEach(function (p) {
       byName[p.term] = { term: p.term, display: p.term, category: 'phrase', count: p.count, weight: DB.CATEGORY_WEIGHT.phrase * sectionWeight(p.section) * Math.min(p.count, 3), required: p.section === 'required', preferred: p.section === 'preferred' };
     });
-    extractProperNouns(blanked, knownLower, result.company).forEach(function (p) {
+    extractProperNouns(blanked, knownLower, result.company, result.title, phrases).forEach(function (p) {
       if (byName[p.term]) return;
       byName[p.term] = { term: p.term, display: p.term, category: 'tool', count: p.count, weight: 2 * sectionWeight(p.section) * Math.min(p.count, 3), required: p.section === 'required', preferred: p.section === 'preferred', inferred: true };
     });
@@ -245,5 +274,5 @@
     return result;
   }
 
-  CVM.analyzer = { analyze: analyze, _splitSections: splitSections, _guessTitle: guessTitle, _guessCompany: guessCompany, _yearsRequired: yearsRequired };
+  CVM.analyzer = { analyze: analyze, _splitTitle: splitTitle, _splitSections: splitSections, _guessTitle: guessTitle, _guessCompany: guessCompany, _yearsRequired: yearsRequired };
 })(typeof window !== 'undefined' ? window : globalThis);

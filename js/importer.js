@@ -20,6 +20,9 @@
 
   function parse(text) {
     var p = CVM.profile.emptyProfile();
+    // Drop template placeholders like "[ add link ]" or "[Branch]" so they never reach a CV.
+    text = U.str(text, 60000).replace(/\[[^\]\n]{0,80}\]/g, '').replace(/[ \t]+([,.;|·])/g, '$1');
+    text = text.replace(/[ \t]{2,}/g, ' ');
     var lines = U.str(text, 60000).replace(/\r/g, '').split('\n').map(function (l) { return l.replace(/\s+$/, ''); });
     var nonEmpty = lines.filter(function (l) { return l.trim(); });
     if (!nonEmpty.length) return p;

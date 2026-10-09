@@ -90,34 +90,41 @@
       body.push(para(runs, { tabRight: right, before: 60, after: 20, keepNext: true }));
     }
 
-    if (cv.summary) { heading('Summary'); body.push(para(run(cv.summary))); }
-    if (cv.skills.length) {
-      heading('Skills');
-      cv.skills.forEach(function (g) { body.push(para([run(g.group + ': ', { bold: true }), run(g.items.join(', '))], { after: 20 })); });
-    }
-    if (cv.experience.length) {
-      heading('Experience');
-      cv.experience.forEach(function (e) { itemHead(e.role, e.dates, [e.company, e.location].filter(Boolean).join(', ')); bullets(e.bullets); });
-    }
-    if (cv.projects.length) {
-      heading('Projects');
-      cv.projects.forEach(function (p) {
-        itemHead(p.name, p.dates, [p.role, p.tech.join(', ')].filter(Boolean).join(' | '));
-        if (p.link) body.push(para(run(p.link.replace(/^https?:\/\/(www\.)?/, ''), { size: 19 }), { after: 20 }));
-        bullets(p.bullets);
-      });
-    }
-    if (cv.education.length) {
-      heading('Education');
-      cv.education.forEach(function (e) {
-        itemHead(e.degree || e.school, e.dates, e.degree ? e.school : '');
-        if (e.grade) body.push(para(run(e.grade)));
-        bullets(e.details);
-      });
-    }
-    if (cv.certifications.length) { heading('Certifications'); bullets(cv.certifications.map(function (c) { return [c.name, c.issuer, c.date].filter(Boolean).join(' — '); })); }
-    if (cv.achievements.length) { heading('Achievements'); bullets(cv.achievements); }
-    if (cv.languages.length) { heading('Languages'); body.push(para(run(cv.languages.join(', ')))); }
+    var parts = {
+      summary: function () { if (cv.summary) { heading('Summary'); body.push(para(run(cv.summary))); } },
+      skills: function () {
+        if (!cv.skills.length) return;
+        heading('Skills');
+        cv.skills.forEach(function (g) { body.push(para([run(g.group + ': ', { bold: true }), run(g.items.join(', '))], { after: 20 })); });
+      },
+      experience: function () {
+        if (!cv.experience.length) return;
+        heading('Experience');
+        cv.experience.forEach(function (e) { itemHead(e.role, e.dates, [e.company, e.location].filter(Boolean).join(', ')); bullets(e.bullets); });
+      },
+      projects: function () {
+        if (!cv.projects.length) return;
+        heading('Projects');
+        cv.projects.forEach(function (p) {
+          itemHead(p.name, p.dates, [p.role, p.tech.join(', ')].filter(Boolean).join(' | '));
+          if (p.link) body.push(para(run(p.link.replace(/^https?:\/\/(www\.)?/, ''), { size: 19 }), { after: 20 }));
+          bullets(p.bullets);
+        });
+      },
+      education: function () {
+        if (!cv.education.length) return;
+        heading('Education');
+        cv.education.forEach(function (e) {
+          itemHead(e.degree || e.school, e.dates, e.degree ? e.school : '');
+          if (e.grade) body.push(para(run(e.grade)));
+          bullets(e.details);
+        });
+      },
+      certifications: function () { if (cv.certifications.length) { heading('Certifications'); bullets(cv.certifications.map(function (c) { return [c.name, c.issuer, c.date].filter(Boolean).join(' — '); })); } },
+      achievements: function () { if (cv.achievements.length) { heading('Achievements'); bullets(cv.achievements); } },
+      languages: function () { if (cv.languages.length) { heading('Languages'); body.push(para(run(cv.languages.join(', ')))); } }
+    };
+    CVM.render.order(cv).forEach(function (k) { if (parts[k]) parts[k](); });
 
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>' +

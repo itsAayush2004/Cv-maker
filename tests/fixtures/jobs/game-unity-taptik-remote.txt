@@ -1,0 +1,37 @@
+Unity Game Developer — 3+ Years Experience
+Taptik Studio is looking for an experienced Unity Game Developer to join our team and work on exciting mobile and casual games.
+What We're Looking For
+- Strong experience with Unity and C#
+- Excellent understanding of Unity's game development workflow and architecture
+- Strong knowledge of Unity Animation System: Animator Controller, Animation Clips, Blend Trees, Avatar/Mecanim, Animation Events, IK, Timeline
+- Strong knowledge of Shaders and Materials: Shader Graph, HLSL/Shader programming, Custom shaders, VFX and visual effects, URP, Post-processing
+- Experience with Unity UI / Canvas / TextMeshPro
+- Strong understanding of 3D physics, colliders, rigidbodies and raycasting
+- Experience with particle systems and VFX
+- Good understanding of lighting, rendering and optimization
+- Experience optimizing games for Android/iOS
+- Understanding of mobile performance optimization: CPU/GPU optimization, Draw calls, Batching, Memory optimization, Object pooling, Profiling
+- Experience with Git/version control
+- Ability to write clean, scalable and maintainable C# code
+- Strong debugging and problem-solving skills
+Good to Have
+- Experience with DOTween
+- Experience with Unity Addressables
+- Experience with Unity Asset Bundles
+- Experience with Firebase / GameAnalytics
+- Experience integrating SDKs and third-party plugins
+- Experience publishing games to Google Play / App Store
+- Experience working on hyper-casual, casual, puzzle, arcade or mobile games
+- Knowledge of procedural generation
+- Experience creating or optimizing custom rendering solutions
+- Experience with AI-assisted game development tools
+Responsibilities
+- Develop and maintain high-quality Unity games.
+- Implement gameplay mechanics, UI, animations, VFX and game systems.
+- Create and integrate custom shaders and visual effects.
+- Optimize games for mobile devices.
+- Debug and resolve technical and performance issues.
+- Work closely with designers and artists to bring game concepts to life.
+- Build reusable and scalable gameplay systems.
+- Participate in prototyping and rapid game development.
+- Prepare builds and help with testing and publishing.

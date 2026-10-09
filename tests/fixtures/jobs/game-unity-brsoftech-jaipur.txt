@@ -1,0 +1,23 @@
+Unity Developer — BR Softech, Jaipur
+Experience : 1 - 1.5 year
+Job Description:
+We are seeking a talented Unity Developer to join our dynamic team. As a Unity Developer, you will be responsible for designing and implementing game functionality, translating design ideas, concepts, and requirements into a functional and engaging game. You will collaborate closely with designers and other team members to deliver high-quality, scalable, and optimized solutions.
+Responsibilities:
+- Implement game functionality as per communicated design.
+- Translate design specification into functional game code.
+- Design, build, and maintain efficient, reusable, and reliable code.
+- Ensure the best possible performance, quality, and responsiveness of applications.
+- Identify bottlenecks and bugs, and devise solutions to address and mitigate these issues.
+- Help maintain code quality, organization, and automatization.
+Requirements:
+- Bachelor's degree in Computer Science, Engineering, or a related field.
+- Proven experience as a Unity Developer with at least 1 year of professional experience.
+- Strong knowledge of Unity2D, including experience with scripting, textures, animation, GUI styles, and user session management.
+- Experience with game physics and particle systems.
+- Experience optimizing memory and space usage for support of older hardware.
+- Ability to constantly learn and stay in touch with evolving game standards and development technologies.
+- Strong understanding of object-oriented programming and software design patterns.
+Preferred Qualifications:
+- Experience with VR and AR development.
+- Familiarity with level design and planning.
+- Experience with game analytics and user behavior analysis.

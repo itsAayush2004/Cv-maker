@@ -21,7 +21,27 @@
     if (k.category === 'title') return titleSimilarity(text, k.term) >= 0.67;
     if (k.category === 'phrase' || k.inferred) return U.hasTerm(text, k.term);
     if (DB.findSkills(text).some(function (s) { return s.name === k.term; })) return true;
-    return k.display && k.display !== k.term && U.hasTerm(text, k.display);
+    // Raw spelling fallback only for terms the dictionary doesn't know (its context rules must win).
+    return DB.categoryOf(k.term) === 'phrase' && k.display && k.display !== k.term && U.hasTerm(text, k.display);
+  }
+
+  // Skills you provably have when your memory shows another one (used as evidence only, never as CV text).
+  var IMPLIES = {
+    'PostgreSQL': ['SQL', 'Databases'], 'MySQL': ['SQL', 'Databases'], 'SQLite': ['SQL', 'Databases'], 'Supabase': ['PostgreSQL', 'SQL', 'Databases', 'Authentication'],
+    'Firebase': ['Databases'], 'MongoDB': ['Databases'], 'Next.js': ['React'], 'TypeScript': ['JavaScript'], 'React': ['JavaScript', 'Frontend Development'],
+    'React Native': ['React', 'Mobile Development'], 'Expo': ['React Native', 'Mobile Development'], 'Unity': ['Game Development'], 'Unreal Engine': ['Game Development'],
+    'Godot': ['Game Development'], 'Rigging': ['Animation'], 'Character Animation': ['Animation'], '3D Animation': ['Animation'], 'Premiere Pro': ['Video Editing'],
+    'DaVinci Resolve': ['Video Editing'], 'Final Cut Pro': ['Video Editing'], 'CapCut': ['Video Editing'], 'After Effects': ['Motion Graphics'],
+    'Claude API': ['Large Language Models', 'Generative AI'], 'OpenAI API': ['Large Language Models', 'Generative AI'], 'MCP': ['Generative AI'],
+    'GitHub Actions': ['CI/CD', 'Git'], 'REST': ['API Design'], 'GraphQL': ['API Design'], 'Short-form Video': ['Video Production'], 'Video Editing': ['Video Production'], 'Docker': ['DevOps'], 'Kubernetes': ['Docker', 'DevOps']
+  };
+
+  function implied(text) {
+    var have = DB.findSkills(text).map(function (s) { return s.name; }), out = [];
+    for (var round = 0; round < 2; round++) {
+      have.concat(out).forEach(function (n) { (IMPLIES[n] || []).forEach(function (x) { if (have.indexOf(x) < 0 && out.indexOf(x) < 0) out.push(x); }); });
+    }
+    return out;
   }
 
   function titleWords(t) {
@@ -37,8 +57,19 @@
   }
 
   // ---------------- evidence: what does the profile prove you have? ----------------
+  function notesEvidence(notes) {
+    // Lines starting with TODO / ? / // are reminders, not facts — they never count as evidence.
+    return U.str(notes).split('\n').filter(function (l) { return !/^\s*(todo|to confirm|\?|\/\/|#)/i.test(l); }).join('\n');
+  }
+
   function profileCorpus(p) {
-    var parts = [p.basics.headline, p.summary, p.memoryNotes];
+    var base = baseCorpus(p);
+    var extra = implied(base);
+    return extra.length ? base + '\nImplied skills: ' + extra.join(', ') : base;
+  }
+
+  function baseCorpus(p) {
+    var parts = [p.basics.headline, U.arr(p.basics.headlines).join('\n'), p.summary, notesEvidence(p.memoryNotes)];
     p.skills.forEach(function (s) { parts.push(s.name); });
     p.experience.forEach(function (e) { parts.push(e.role, e.company, e.bullets.join('\n'), e.tech.join(', ')); });
     p.projects.forEach(function (e) { parts.push(e.name, e.role, e.bullets.join('\n'), e.tech.join(', ')); });
@@ -58,22 +89,25 @@
       if (textHas(text, k)) { score += k.weight; hits.push(k.term); }
       else if (ctxTech && textHas(ctxTech, k)) score += k.weight * 0.15;
     });
+    var kw = score;
     if (METRIC_RE.test(text)) score += 2.5;
     var first = U.words(text)[0] || '';
     if (DB.ACTION_VERBS.indexOf(first) >= 0) score += 1;
     var len = U.words(text).length;
     if (len < 6) score -= 1;
     if (len > 40) score -= 1.5;
-    return { score: score, hits: hits };
+    return { score: score, hits: hits, kw: kw };
   }
 
   function rankBullets(bullets, tech, keywords, max) {
     var ctx = U.arr(tech).join(', ');
     var scored = bullets.map(function (b, i) {
       var s = scoreBullet(b, ctx, keywords);
-      return { text: b, score: s.score, hits: s.hits, idx: i };
+      return { text: b, score: s.score, hits: s.hits, kw: s.kw, idx: i };
     });
     scored.sort(function (a, b) { return b.score - a.score || a.idx - b.idx; });
+    // Beyond the strongest two, keep only bullets that hit at least one job keyword (off-topic lines dilute the match).
+    if (keywords.length) scored = scored.filter(function (r, i) { return i < 2 || r.hits.length > 0; });
     return scored.slice(0, max);
   }
 
@@ -105,7 +139,14 @@
   }
 
   // ---------------- skills ----------------
-  function buildSkills(p, analysis, corpus) {
+  /** The job's own spelling when it is a proper term ("ReactJS", "Node.js"); the canonical name for plain words ("rigs" → "Rigging"). */
+  function niceName(k) {
+    var d = U.str(k.display || k.term);
+    if (/\b(manager|creator|developer|engineer|designer|animator|artist|editor|writer)s?$/i.test(d) && DB.categoryOf(k.term) !== 'phrase') return k.term;
+    if (DB.categoryOf(k.term) === 'phrase') return d.charAt(0).toUpperCase() + d.slice(1);
+    return /[A-Z0-9.+#]/.test(d) && d.length > 1 && !/^[A-Z][a-z]+s$/.test(d) ? d : k.term;
+  }
+  function buildSkills(p, analysis, corpus, usedText) {
     var keywords = analysis.keywords || [];
     var picked = [], seen = Object.create(null);
     function add(name, category, matched) {
@@ -117,18 +158,27 @@
     // 1. JD keywords you have evidence for — written the way the job post writes them.
     keywords.forEach(function (k) {
       if (k.category === 'title' || k.category === 'phrase' || k.category === 'soft') return;
-      if (textHas(corpus, k)) add(k.display || k.term, k.category === 'tool' && k.inferred ? 'tool' : k.category, true);
+      if (textHas(corpus, k)) add(niceName(k), k.category === 'tool' && k.inferred ? 'tool' : k.category, true);
     });
     // 2. Your remaining listed skills (dictionary-known first, they're searchable keywords).
+    // When targeting a job, unmatched skills are shown only if the CV's selected projects/roles actually use them.
     var rest = p.skills.map(function (s) { return s.name; });
+    if (!analysis.empty && usedText) {
+      var jdWords = Object.create(null);
+      U.words(analysis.rawText).forEach(function (w) { if (w.length > 3) jdWords[w.replace(/s$/, '')] = 1; });
+      rest = rest.filter(function (s) {
+        var sharesJobWord = U.words(s).some(function (w) { return w.length > 3 && jdWords[w.replace(/s$/, '')]; });
+        return sharesJobWord || U.hasTerm(usedText, s) || DB.findSkills(usedText).some(function (f) { return f.name === DB.canonical(s); });
+      });
+    }
     rest.sort(function (a, b) { return (DB.categoryOf(a) === 'phrase') - (DB.categoryOf(b) === 'phrase'); });
     rest.forEach(function (s) { add(s, null, false); });
     // 3. Soft skills only when the job asks for them and you have evidence.
     var soft = keywords.filter(function (k) { return k.category === 'soft' && textHas(corpus, k); }).map(function (k) { return k.term; });
 
-    var groups = { 'Languages & Frameworks': [], 'Tools & Platforms': [], 'Expertise': [] };
+    var groups = { 'Languages, Frameworks & Engines': [], 'Tools & Platforms': [], 'Expertise': [] };
     picked.forEach(function (s) {
-      var g = s.category === 'language' || s.category === 'framework' ? 'Languages & Frameworks'
+      var g = s.category === 'language' || s.category === 'framework' ? 'Languages, Frameworks & Engines'
         : s.category === 'tool' ? 'Tools & Platforms' : s.category === 'soft' ? null : 'Expertise';
       if (g) groups[g].push(s);
     });
@@ -186,7 +236,7 @@
     var headline = p.basics.headline;
     var titleNote = '';
     if (o.mirrorTitle !== false && a.title) {
-      var ownTitles = [p.basics.headline].concat(p.experience.map(function (e) { return e.role; })).join(' ');
+      var ownTitles = [p.basics.headline].concat(p.basics.headlines, p.experience.map(function (e) { return e.role; }), p.projects.map(function (x) { return x.role; })).join(' ');
       var target = a.title.replace(SENIORITY_RE, function (w) { return U.hasTerm(ownTitles, w.trim()) ? w : ' '; }).replace(/\s+/g, ' ').trim();
       var evidence = ownTitles + ' ' + p.skills.map(function (s) { return s.name; }).join(' ');
       var sim = titleSimilarity(evidence, target);
@@ -194,8 +244,17 @@
         headline = target;
         titleNote = 'Headline set to "' + target + '" to mirror the job title (your memory supports it).';
       } else {
-        titleNote = 'Kept your own headline — your memory doesn\'t clearly support "' + a.title + '". Add a matching role or headline in memory if accurate.';
+        titleNote = 'Your memory doesn\'t clearly support the title "' + a.title + '" — using your closest accurate headline. Add a matching role or headline in memory if accurate.';
       }
+    }
+    if (headline === p.basics.headline && p.basics.headlines.length && !a.empty) {
+      // Pick whichever of your own headlines best fits this job.
+      var options = [p.basics.headline].concat(p.basics.headlines).filter(Boolean);
+      var scored = options.map(function (h, i) {
+        var kw = keywords.reduce(function (acc, k) { return acc + (k.category !== 'title' && textHas(h, k) ? k.weight : 0); }, 0);
+        return { h: h, s: (a.title ? titleSimilarity(h, a.title) * 20 : 0) + kw - i * 0.01 };
+      }).sort(function (x, y) { return y.s - x.s; });
+      if (scored[0].h !== headline) { headline = scored[0].h; titleNote = (titleNote ? titleNote + ' ' : '') + 'Picked your headline "' + headline + '" as the closest match.'; }
     }
 
     var exps = sortByRecency(p.experience);
@@ -208,7 +267,7 @@
         role: e.role, company: e.company, location: e.location,
         dates: U.dateRange(e.start, e.end, e.current),
         bullets: ranked.map(function (r) { return r.text; }),
-        relevance: ranked.reduce(function (s, r) { return s + Math.max(r.score, 0); }, 0)
+        relevance: ranked.reduce(function (s, r) { return s + (r.kw || 0); }, 0)
       };
     });
 
@@ -221,15 +280,21 @@
         return {
           name: pr.name, role: pr.role, link: pr.link, dates: U.dateRange(pr.start, pr.end, false),
           tech: pr.tech, bullets: ranked.map(function (r) { return r.text; }), _ranked: ranked,
-          relevance: ranked.reduce(function (s, r) { return s + Math.max(r.score, 0); }, 0) + techScore
+          relevance: ranked.reduce(function (s, r) { return s + (r.kw || 0); }, 0) + techScore
         };
       });
       projects.sort(function (x, y) { return y.relevance - x.relevance; });
+      if (!a.empty && projects.length > 1) {
+        // Drop projects that barely relate to this job (keep at least the best one).
+        var top = projects[0].relevance;
+        projects = projects.filter(function (pr, i) { return i < 1 || pr.relevance >= top * 0.35 || (i < 3 && pr.relevance > 0); });
+      }
       projects = projects.slice(0, o.maxProjects === undefined ? 3 : o.maxProjects);
       projects.forEach(function (pr) { pr._ranked.forEach(function (r) { allBullets.push(r); }); delete pr._ranked; });
     }
 
-    var skills = buildSkills(p, a, corpus);
+    var usedText = experience.map(function (e) { return e.role + ' ' + e.bullets.join(' '); }).concat(projects.map(function (pr) { return pr.name + ' ' + pr.tech.join(', ') + ' ' + pr.bullets.join(' '); })).join('\n');
+    var skills = buildSkills(p, a, corpus, usedText);
     var matchedSkills = [];
     skills.forEach(function (g) { if (g.group !== 'Strengths') g.items.forEach(function (s) { if (keywords.some(function (k) { return (k.display === s || k.term === DB.canonical(s)); })) matchedSkills.push(s); }); });
     if (!matchedSkills.length && skills.length) matchedSkills = skills[0].items.slice(0, 3);
@@ -237,10 +302,25 @@
     allBullets.sort(function (x, y) { return y.score - x.score; });
     var best = allBullets.filter(function (b) { return METRIC_RE.test(b.text) && U.words(b.text).length <= 28; })[0];
 
-    var summary = a.empty && p.summary ? p.summary : buildSummary(p, a, { years: years, headline: headline, matchedSkills: matchedSkills, bestBullet: best && best.text });
+    // Several summaries (separated by a blank line) = one per target role: use the best match verbatim (your voice).
+    var summaries = p.summary.split(/\n\s*\n/).map(function (x) { return x.replace(/\s+/g, ' ').trim(); }).filter(Boolean);
+    var summary;
+    if (summaries.length > 1) {
+      summary = summaries.map(function (x, i) {
+        return { x: x, s: keywords.reduce(function (acc, k) { return acc + (textHas(x, k) ? k.weight : 0); }, 0) - i * 0.01 };
+      }).sort(function (m, n) { return n.s - m.s; })[0].x;
+    } else {
+      summary = a.empty && p.summary ? p.summary : buildSummary(p, a, { years: years, headline: headline, matchedSkills: matchedSkills, bestBullet: best && best.text });
+    }
     if (!p.summary && !p.experience.length && !p.projects.length) summary = '';
 
+    var expRel = experience.reduce(function (acc, e) { return acc + e.relevance; }, 0);
+    var prjRel = projects.reduce(function (acc, pr) { return acc + pr.relevance; }, 0);
+    var order = ['summary', 'skills', 'experience', 'projects', 'education', 'certifications', 'achievements', 'languages'];
+    if (!a.empty && projects.length && prjRel > expRel * 1.2) order = ['summary', 'skills', 'projects', 'experience', 'education', 'certifications', 'achievements', 'languages'];
+
     var cv = {
+      order: order,
       meta: { jobTitle: a.title || '', company: a.company || '', generatedAt: new Date().toISOString(), titleNote: titleNote, engine: 'offline' },
       basics: { name: p.basics.name, headline: headline, email: p.basics.email, phone: p.basics.phone, location: p.basics.location, links: p.basics.links.slice(0, 4) },
       summary: summary,
@@ -253,7 +333,12 @@
       certifications: p.certifications.map(function (c) {
         return { name: c.name, issuer: c.issuer, date: U.formatDate(c.date) };
       }),
-      achievements: a.empty ? p.achievements.slice(0, 4) : rankBullets(p.achievements, [], keywords, 4).map(function (r) { return r.text; }),
+      achievements: (a.empty ? p.achievements.slice(0, 4) : rankBullets(p.achievements, [], keywords, 4).map(function (r) { return r.text; })).filter(function (t) {
+        // Skip achievements already stated in Education (e.g. an exam rank written in both places).
+        var eduText = p.education.map(function (e) { return e.grade + ' ' + e.details.join(' '); }).join(' ');
+        var nums = (t.match(/\d[\d.,]{2,}/g) || []).filter(function (n) { return !/^(19|20)\d\d$/.test(n); });
+        return !(nums.length && nums.every(function (n) { return eduText.indexOf(n) >= 0; }));
+      }),
       languages: p.languages
     };
     return cv;
@@ -263,23 +348,30 @@
   function cvText(cv) {
     var lines = [cv.basics.name, cv.basics.headline, [cv.basics.email, cv.basics.phone, cv.basics.location].filter(Boolean).join(' | ')];
     cv.basics.links.forEach(function (l) { lines.push(l.url); });
-    if (cv.summary) lines.push('SUMMARY', cv.summary);
-    if (cv.skills.length) { lines.push('SKILLS'); cv.skills.forEach(function (g) { lines.push(g.group + ': ' + g.items.join(', ')); }); }
-    if (cv.experience.length) {
-      lines.push('EXPERIENCE');
-      cv.experience.forEach(function (e) { lines.push(e.role + ' — ' + e.company + (e.location ? ', ' + e.location : ''), e.dates); e.bullets.forEach(function (b) { lines.push('• ' + b); }); });
-    }
-    if (cv.projects.length) {
-      lines.push('PROJECTS');
-      cv.projects.forEach(function (pr) { lines.push(pr.name + (pr.role ? ' — ' + pr.role : '') + (pr.tech.length ? ' | ' + pr.tech.join(', ') : ''), pr.link, pr.dates); pr.bullets.forEach(function (b) { lines.push('• ' + b); }); });
-    }
-    if (cv.education.length) {
-      lines.push('EDUCATION');
-      cv.education.forEach(function (e) { lines.push(e.degree + ' — ' + e.school, e.dates, e.grade); e.details.forEach(function (d) { lines.push('• ' + d); }); });
-    }
-    if (cv.certifications.length) { lines.push('CERTIFICATIONS'); cv.certifications.forEach(function (c) { lines.push([c.name, c.issuer, c.date].filter(Boolean).join(' — ')); }); }
-    if (cv.achievements.length) { lines.push('ACHIEVEMENTS'); cv.achievements.forEach(function (a) { lines.push('• ' + a); }); }
-    if (cv.languages.length) { lines.push('LANGUAGES', cv.languages.join(', ')); }
+    var parts = {
+      summary: function () { if (cv.summary) lines.push('SUMMARY', cv.summary); },
+      skills: function () { if (cv.skills.length) { lines.push('SKILLS'); cv.skills.forEach(function (g) { lines.push(g.group + ': ' + g.items.join(', ')); }); } },
+      experience: function () {
+        if (!cv.experience.length) return;
+        lines.push('EXPERIENCE');
+        cv.experience.forEach(function (e) { lines.push(e.role + ' — ' + e.company + (e.location ? ', ' + e.location : ''), e.dates); e.bullets.forEach(function (b) { lines.push('• ' + b); }); });
+      },
+      projects: function () {
+        if (!cv.projects.length) return;
+        lines.push('PROJECTS');
+        cv.projects.forEach(function (pr) { lines.push(pr.name + (pr.role ? ' — ' + pr.role : '') + (pr.tech.length ? ' | ' + pr.tech.join(', ') : ''), pr.link, pr.dates); pr.bullets.forEach(function (b) { lines.push('• ' + b); }); });
+      },
+      education: function () {
+        if (!cv.education.length) return;
+        lines.push('EDUCATION');
+        cv.education.forEach(function (e) { lines.push(e.degree + ' — ' + e.school, e.dates, e.grade); e.details.forEach(function (d) { lines.push('• ' + d); }); });
+      },
+      certifications: function () { if (cv.certifications.length) { lines.push('CERTIFICATIONS'); cv.certifications.forEach(function (c) { lines.push([c.name, c.issuer, c.date].filter(Boolean).join(' — ')); }); } },
+      achievements: function () { if (cv.achievements.length) { lines.push('ACHIEVEMENTS'); cv.achievements.forEach(function (a) { lines.push('• ' + a); }); } },
+      languages: function () { if (cv.languages.length) lines.push('LANGUAGES', cv.languages.join(', ')); }
+    };
+    var ord = CVM.render ? CVM.render.order(cv) : Object.keys(parts);
+    ord.forEach(function (k) { if (parts[k]) parts[k](); });
     return lines.filter(function (l) { return l !== undefined && l !== null && String(l).trim() !== ''; }).join('\n');
   }
 
@@ -317,6 +409,8 @@
     add(b.phone ? 'pass' : 'warn', 'Phone number', b.phone ? '' : 'Most recruiters expect a phone number.');
     add(b.location ? 'pass' : 'warn', 'Location (city, country)', b.location ? '' : 'Many ATS filters search by location.');
     add('pass', 'Single-column layout, standard headings, real text (no tables/images/icons)', 'Built-in: every template is ATS-safe.');
+    var placeholders = cvText(cv).match(/\[[^\]\n]{0,80}\]|\bTODO\b|\bX{2,}\b|your-handle|@your/gi) || [];
+    add(placeholders.length ? 'fail' : 'pass', 'No unfinished placeholders', placeholders.length ? 'Remove or fill before sending: ' + U.unique(placeholders).slice(0, 4).join(', ') : '');
 
     var bullets = [];
     cv.experience.forEach(function (e) { bullets = bullets.concat(e.bullets); });
@@ -344,7 +438,7 @@
 
     if (analysis && !analysis.empty) {
       var text = cvText(cv);
-      var stuffed = (analysis.keywords || []).filter(function (k) { return k.category !== 'title' && U.countTerm(text, k.display || k.term) > 8; });
+      var stuffed = (analysis.keywords || []).filter(function (k) { return k.category !== 'title' && U.countTerm(text, k.display || k.term) > Math.max(10, (k.count || 1) * 4); });
       add(stuffed.length ? 'warn' : 'pass', 'No keyword stuffing', stuffed.length ? 'Repeated a lot: ' + stuffed.map(function (k) { return k.term; }).join(', ') : '');
       if (analysis.title) {
         var sim = titleSimilarity(b.headline, analysis.title);
@@ -367,6 +461,22 @@
     return Math.round(matchResult.coverage * 0.7 + fmt * 0.3);
   }
 
+  /** Remove the single least valuable thing from a CV (used to fit one page). Bullets are already sorted
+   * best-first, so the last bullet of the longest item goes first. Returns false when nothing sensible is left to cut. */
+  function trimOnce(cv) {
+    var items = cv.experience.concat(cv.projects);
+    for (var min = 3; min >= 2; min--) {
+      var longest = items.filter(function (i) { return i.bullets.length > min; }).sort(function (x, y) { return y.bullets.length - x.bullets.length; })[0];
+      if (longest) { longest.bullets.pop(); return true; }
+    }
+    if (cv.achievements.length) { cv.achievements.pop(); return true; }
+    if (cv.projects.length > 2) { cv.projects.pop(); return true; }
+    var two = items.filter(function (i) { return i.bullets.length > 1; }).sort(function (x, y) { return y.bullets.length - x.bullets.length; })[0];
+    if (two) { two.bullets.pop(); return true; }
+    if (cv.skills.length && cv.skills[cv.skills.length - 1].items.length > 4) { cv.skills[cv.skills.length - 1].items.pop(); return true; }
+    return false;
+  }
+
   /** One call does it all. Never throws: returns {cv, match, checks, score}. */
   function run(profile, jdText, settings) {
     var analysis = CVM.analyzer.analyze(jdText);
@@ -383,7 +493,7 @@
   }
 
   CVM.tailor = {
-    run: run, evaluate: evaluate, tailor: tailor, match: match, checks: checks, atsScore: atsScore, cvText: cvText,
+    run: run, evaluate: evaluate, tailor: tailor, trimOnce: trimOnce, match: match, checks: checks, atsScore: atsScore, cvText: cvText,
     totalYears: totalYears, textHas: textHas, profileCorpus: profileCorpus, METRIC_RE: METRIC_RE
   };
 })(typeof window !== 'undefined' ? window : globalThis);
