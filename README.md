@@ -35,21 +35,30 @@ Keep **one memory** of your whole career. Paste any job description. Get a **tai
 
 ## Tested on real job posts
 
-Eight live Indeed India postings from October 2026 are in `tests/fixtures/jobs/`, with contact details removed: two each for Unity/game, full-stack web, 3D animation and social media. Each one was run against a memory built from four hand-made role CVs. An independent scorer, sharing no code with this app, then compared the auto-tailored CV with the hand-made CV for that role:
+25 live Indeed India postings from October 2026 are in `tests/fixtures/jobs/`, with contact details removed. They cover game (Unity, Unreal, HTML5, XR), web (frontend, full-stack, backend, React Native), 3D animation and social media/video, and many are internships or fresher roles. Each one was run against a memory built from four hand-made role CVs. An independent scorer, sharing no code with this app, compared the auto-tailored CV with the hand-made CV for that role:
 
-| | Hand-made role CV | CV Forge (auto, from one memory) |
+| Across 25 jobs | Hand-made role CV | CV Forge offline (auto, from one memory) |
 |---|---|---|
-| Job-post term recall (avg) | 25% | **28%** (equal or better on 8/8) |
-| Text similarity to the post (avg) | 0.33 | **0.35** (better on 6/8) |
-| Projects chosen | — | the same projects the person picked by hand, for every role |
+| Job-post term recall (avg) | 25% | **26%** |
+| Text similarity to the post (avg) | 0.29 | **0.31** (better on 18/25) |
+| Title + company parsed correctly | — | 25/25 |
 | Page count | 1–2 | 1 (fit-to-page) |
 
-The benchmark found real bugs, all now fixed and covered by tests:
-- Titles like "Unity Developer — BR Softech" weren't split into title and company.
-- Generic words ("Developer", "Studio") were counted as keywords.
-- "Communication" was matched inside a degree name.
-- Reminder notes counted as evidence.
-- Off-topic projects diluted the match.
+Honest reading: offline mode is about as good as careful hand-tailoring, done instantly for any job. It can only select and reorder your own text, so AI mode is what can go further. Every bug the benchmark found is now a regression test:
+- titles like "Unity Developer — BR Softech" weren't split into title and company
+- generic words ("Developer", "Studio") counted as keywords
+- "Communication" was matched inside a degree name
+- "Instagram algorithms" counted as data-structures skill
+- "R&D" was read as the R language
+- the company "Spark Technologies" was read as Apache Spark
+- reminder notes counted as evidence
+- a title like "AI + Full Stack" was mirrored without AI evidence
+
+## AI mode: how it's tested, and keeping your key safe
+
+- **Your key never goes in this repo.** In the app it lives only in your browser's storage, and it's never included in backups or exports. For the test scripts it comes only from the `ANTHROPIC_API_KEY` environment variable. `.env` files are git-ignored, and `tests/secrets.test.js` fails if anything that looks like a key would be committed.
+- `npm run test:ai-contract` drives the real UI with the real SDK and a **simulated** API. It checks the request shape and refusal fallbacks, that invented numbers (e.g. "50k subscribers") and skills not in your memory are blocked, and that 401, refusal and garbage responses leave your offline CV untouched. It checks wiring and safety, not quality.
+- `npm run test:ai` is the **live** test against the real API. It skips cleanly if no key is set, and audits every AI CV for invented numbers, unbacked skills and changed employers or dates. The full report (with your CV text) goes to the git-ignored `private/ai-report.md`. Options: `AI_JOBS=all`, `AI_RESEARCH=1` (web research, slower and costs more), `AI_MODEL=claude-sonnet-5-5`.
 
 ### Memory tips
 - **Several headlines:** add other accurate titles under Basics. The best one is picked for each job.
@@ -82,12 +91,16 @@ js/importer.js      paste-a-CV parser + memory merge
 js/ai.js            optional Claude research + rewrite
 js/app.js           UI controller
 data/profiles.js    starter draft, example profile, example job
-tests/              unit tests (node --test) + browser e2e (Playwright)
+tests/              unit + secrets tests (node --test), browser e2e, AI contract + live tests
+tests/fixtures/jobs 25 real job posts used as regression fixtures
 ```
 
 ## Tests
 
 ```bash
-npm test          # engine unit tests (Node 18+)
-npm run e2e       # full browser run-through (needs Playwright + Chromium)
+npm install               # dev tools for the AI tests (SDK + esbuild)
+npm test                  # engine, real-job regression and secrets tests
+npm run e2e               # full browser run-through (needs Playwright + Chromium)
+npm run test:ai-contract  # AI mode with a simulated API (browser)
+npm run test:ai           # AI mode live — needs ANTHROPIC_API_KEY in your environment
 ```

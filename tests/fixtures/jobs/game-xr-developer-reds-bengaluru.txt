@@ -1,0 +1,22 @@
+Real-Time 3D & XR Developer (Unity / Unreal) — REDS, Bengaluru
+Experience: 3–6 years
+Key responsibilities
+- Develop applications in Unity (C#) or Unreal Engine (Blueprints and C++) from prototype to production
+- Build reusable frameworks for digital twins, product viewers and configurators
+- Build AR apps with ARKit, ARCore and AR Foundation, VR builds for Meta Quest and PC VR, and WebXR experiences
+- Optimise for target devices: frame rate, memory, 4K and 8K canvases, multi-display output and mobile thermals
+- Load content and configuration from the platform so client teams can update a twin or product catalogue without a new build
+- Connect to live data over REST, WebSockets and MQTT
+- Define asset budgets and pipelines with the 3D artist (FBX, glTF/GLB, USD, LODs, lightmaps)
+What you need
+- 3–6 years of professional development in Unity or Unreal Engine, with shipped projects
+- Strong C# or C++ and solid 3D maths (transforms, cameras, basic shaders)
+- Experience with at least one of AR (ARKit, ARCore, AR Foundation) or VR (OpenXR, Meta Quest)
+- Performance profiling and optimisation on real devices
+- Git and day-to-day teamwork with designers and artists
+- B.E./B.Tech, a degree in game development, or equivalent practical experience
+Nice to have
+- Digital twins, BIM/IFC import or architectural visualisation
+- Pixel Streaming, WebGL or Three.js
+- Shader Graph, HLSL, VFX Graph or Niagara
+Skills: Unity, Unreal Engine, C#, C++, AR Foundation, ARKit, ARCore, OpenXR, WebXR, Digital Twin

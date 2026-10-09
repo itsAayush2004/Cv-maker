@@ -9,8 +9,8 @@
   var MAX_LEN = 60000;
 
   var SECTION_PATTERNS = [
-    { key: 'required', re: /^(requirements?|required|must[\s-]have|minimum qualifications|basic qualifications|what you('| wi)ll (need|bring)|what we('re| are) looking for|who you are|qualifications|skills( required)?|you have|about you|your profile|ideal candidate)\b/i },
-    { key: 'preferred', re: /^(preferred|nice[\s-]to[\s-]have|bonus|pluses|plus|desired|good to have|preferred qualifications|extra credit|it'?s a plus)/i },
+    { key: 'required', re: /^(requirements?|required|must[\s-]have|what you need|who can apply|candidate requirements|eligibility|key skills|skills and qualifications|who we'?re looking for|minimum qualifications|basic qualifications|what you('| wi)ll (need|bring)|what we('re| are) looking for|who you are|qualifications|skills( required)?|you have|about you|your profile|ideal candidate)\b/i },
+    { key: 'preferred', re: /^(strongly preferred|preferred|nice[\s-]to[\s-]have|bonus|pluses|plus|desired|good to have|preferred qualifications|extra credit|it'?s a plus)/i },
     { key: 'responsibilities', re: /^(about the (role|job|position)|responsibilities|what you('| wi)ll do|the role|role overview|your role|duties|key responsibilities|in this role|day[\s-]to[\s-]day|you will)\b/i },
     { key: 'benefits', re: /^(benefits|perks|what we offer|why (join|work)|compensation|salary|we offer)/i },
     { key: 'about', re: /^(about\b|who we are|our (company|mission|story)|company overview)/i }
@@ -55,32 +55,46 @@
   var GENERIC = ('developer developers engineer engineers manager managers designer designers artist artists animator animators rigger ' +
     'creator creators intern interns internship game games studio studios remote hybrid onsite fresher freshers experience years year ' +
     'senior junior lead trainee executive specialist associate role position job team company pvt ltd private limited llp inc ' +
-    'cpu gpu ppo hr ctc lpa pay benefits salary stipend apply email contact work location india').split(/\s+/);
+    'cpu gpu ppo hr ctc lpa pay benefits salary stipend apply email contact work location india basic essential strong good similar creative store mca bca cse aaa').split(/\s+/);
   var GENERICSET = Object.create(null);
   GENERIC.forEach(function (w) { GENERICSET[w] = 1; });
+
+  var ROLE_WORDS = /(engineer|developer|designer|manager|analyst|artist|editor|scientist|specialist|lead|architect|consultant|writer|producer|animator|creator|marketer|director|intern|officer|executive|coordinator|administrator|strategist|technician|associate|visuali[sz]er|programmer|tester|trainee|presenter|host|modell?er|rigger|freelancer)/i;
+  var EMPLOYMENT = /^(remote|hybrid|on-?site|in[\s-]?office|fresher|freshers|full[\s-]?time|part[\s-]?time|internship|intern|contract|freelance|temporary|permanent|wfh|work from home|india|\d+\s*[-–+]?\s*\d*\+?\s*(years?|yrs?)(\s+(of\s+)?experience)?)$/i;
 
   /** "Unity Developer — BR Softech, Jaipur (Remote)" → { title: "Unity Developer", rest: "BR Softech" } */
   function splitTitle(raw) {
     var t = U.str(raw).replace(/[*_#]+/g, ' ').replace(/\s*\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
-    var parts = t.split(/\s+[—–|]\s+|\s+-\s+|\s+@\s+|\s+at\s+(?=[A-Z])/);
-    var title = parts[0].replace(/\s*\((?:remote|hybrid|on-?site|fresher|full[\s-]?time|part[\s-]?time|internship|contract|wfh|work from home)[^)]*\)?\s*$/i, '')
-      .replace(/\s*[-–—(]?\s*\d+\s*[-–+]?\s*\d*\+?\s*(years?|yrs?)(\s+(of\s+)?experience)?\)?\s*$/i, '').trim();
-    var rest = parts.slice(1).join(' ').replace(/\(.*?\)/g, '').split(',')[0].trim();
-    if (/^\d|years?|experience|remote|fresher/i.test(rest)) rest = '';
+    var parts = t.split(/\s+[—–|]\s+|\s+-\s+|\s+@\s+|\s+at\s+(?=[A-Z])/).map(function (x) { return x.trim(); })
+      .filter(function (x) { return x && !EMPLOYMENT.test(x); });
+    if (!parts.length) return { title: '', rest: '' };
+    var title = parts[0].replace(/\s*[-–—]?\s*\d+\s*[-–+]?\s*\d*\+?\s*(years?|yrs?)(\s+(of\s+)?experience)?\s*$/i, '').trim();
+    // The company is the last part that doesn't itself look like a role ("Reels & Video Editor – AI Content Creator — Lembark").
+    var rest = '';
+    for (var i = parts.length - 1; i >= 1; i--) {
+      var cand = parts[i].split(',')[0].trim();
+      if (cand && !ROLE_WORDS.test(cand) && !/^\d/.test(cand)) { rest = cand; break; }
+    }
     return { title: title, rest: rest };
   }
 
   function guessTitle(text) {
-    var m = text.match(/(?:job\s*title|position|role)\s*[:\-–]\s*([^\n]{3,90})/i);
-    if (m) return m[1].trim();
-    m = text.match(/(?:hiring|looking for|seeking)\s+(?:an?\s+)?((?:senior|junior|lead|principal|staff|mid[\s-]level|associate|head of)?\s*[A-Z][\w+#./-]*(?:\s+[A-Z&][\w+#./-]*){0,5})/);
-    if (m && /(engineer|developer|designer|manager|analyst|artist|editor|scientist|specialist|lead|architect|consultant|writer|producer|animator|creator|marketer|director|intern|officer|executive|coordinator|administrator|strategist)/i.test(m[1])) return m[1].trim();
     var lines = text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
-    for (var i = 0; i < Math.min(lines.length, 5); i++) {
-      var l = lines[i].replace(/^[#*_\s]+|[*#_\s]+$/g, '').replace(/\s*\([^)]*\)/g, ' ');
-      if (l.length > 2 && l.length < 80 && /(engineer|developer|designer|manager|analyst|artist|editor|scientist|specialist|lead|architect|consultant|writer|producer|animator|creator|marketer|director|intern|officer|executive|coordinator|administrator|strategist|technician|associate)/i.test(l)) {
-        return l.split(/\s+[-–|@]\s+|\s+at\s+/i)[0].trim();
-      }
+    function clean(l) { return l.replace(/^[#*_\s]+|[*#_\s:]+$/g, ''); }
+    // 1. A header line near the top ("Unity Developer — BR Softech, Jaipur").
+    for (var i = 0; i < Math.min(lines.length, 3); i++) {
+      var l = clean(lines[i]);
+      if (l.length > 2 && l.length < 110 && !/[.!?]$/.test(l) && ROLE_WORDS.test(l) && l.split(' ').length <= 14) return l;
+    }
+    // 2. An explicit label ("Job Title: …").
+    var m = text.match(/(?:^|\n)\s*\**(?:job\s*title|position|role)\**\s*:\s*\**([^\n*]{3,90})/i);
+    if (m) return m[1].trim();
+    // 3. "We are looking for a Unity Developer who…"
+    m = text.match(/(?:hiring|looking for|seeking)\s+(?:an?\s+)?(?:\w+\s+(?:and\s+)?){0,2}?((?:senior|junior|lead|principal|staff|associate|head of)?\s*[A-Z0-9][\w+#./&-]*(?:\s+[A-Z0-9&][\w+#./&-]*){0,5})/);
+    if (m && ROLE_WORDS.test(m[1])) return m[1].trim();
+    for (var j = 3; j < Math.min(lines.length, 6); j++) {
+      var l2 = clean(lines[j]);
+      if (l2.length > 2 && l2.length < 80 && !/[.!?]$/.test(l2) && ROLE_WORDS.test(l2)) return l2;
     }
     return '';
   }
@@ -213,9 +227,10 @@
 
     // Score every known skill by where and how often it appears.
     var byName = Object.create(null);
+    var companyRe = result.company && result.company.length > 2 ? U.termRegex(result.company) : null;
     lines.forEach(function (l) {
       if (l.section === 'benefits' || l.section === 'about') return;
-      DB.findSkills(l.text).forEach(function (s) {
+      DB.findSkills(companyRe ? l.text.replace(companyRe, '$1 ; ') : l.text).forEach(function (s) {
         var k = byName[s.name] || (byName[s.name] = { term: s.name, display: s.matched, category: s.category, count: 0, weight: 0, required: false, preferred: false });
         k.count += s.count;
         k.weight += DB.CATEGORY_WEIGHT[s.category] * sectionWeight(l.section) * Math.min(s.count, 3);

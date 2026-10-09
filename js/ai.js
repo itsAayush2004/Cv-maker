@@ -14,6 +14,8 @@
   var KEY_STORE = 'cvforge.anthropicKey';
 
   var sdkPromise = null;
+  /** Tests (Node) inject the npm SDK instead of the CDN build. */
+  function setSdk(AnthropicClass) { sdkPromise = Promise.resolve(AnthropicClass); }
   function loadSdk() {
     if (!sdkPromise) {
       sdkPromise = import(SDK_URL).then(function (mod) { return mod.default || mod.Anthropic; })
@@ -22,8 +24,18 @@
     return sdkPromise;
   }
 
-  function getKey() { try { return root.localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }
-  function setKey(k) { try { if (k) root.localStorage.setItem(KEY_STORE, k.trim()); else root.localStorage.removeItem(KEY_STORE); } catch (e) { /* ignore */ } }
+  // The key lives only in this browser's localStorage (never in backups, exports or the repo).
+  // Where storage is unavailable (private mode, Node tests) it is kept in memory for this session only.
+  var memoryKey = '';
+  function getKey() {
+    try { var k = root.localStorage.getItem(KEY_STORE); if (k) return k; } catch (e) { /* fall through */ }
+    return memoryKey;
+  }
+  function setKey(k) {
+    k = U.str(k).trim();
+    memoryKey = k;
+    try { if (k) root.localStorage.setItem(KEY_STORE, k); else root.localStorage.removeItem(KEY_STORE); } catch (e) { /* memory only */ }
+  }
 
   function client() {
     var key = getKey();
@@ -138,13 +150,26 @@
   }
 
   /** Apply AI output on top of the offline draft with strict validation. */
+  /** Numbers in a line ("750+", "60-degree", "98.9") that do not appear anywhere in your memory = invented metrics. */
+  function inventedNumbers(line, corpus) {
+    var known = Object.create(null);
+    (U.str(corpus).match(/\d+(?:[.,]\d+)?/g) || []).forEach(function (n) { known[n] = 1; });
+    return (U.str(line).match(/\d+(?:[.,]\d+)?/g) || []).filter(function (n) { return !known[n]; });
+  }
+
   function merge(draft, data, profile) {
     var cv = U.clone(draft);
     var corpus = CVM.tailor.profileCorpus(profile);
+    var rejected = [];
     function clean(s, max) { return U.str(s, max || 400).replace(/\s+/g, ' ').trim(); }
+    function honest(line) {
+      var bad = inventedNumbers(line, corpus);
+      if (bad.length) rejected.push(line);
+      return !bad.length;
+    }
     if (data && typeof data === 'object') {
       if (clean(data.headline, 120)) cv.basics.headline = clean(data.headline, 120);
-      if (clean(data.summary, 900).length > 40) cv.summary = clean(data.summary, 900);
+      if (clean(data.summary, 900).length > 40 && honest(clean(data.summary, 900))) cv.summary = clean(data.summary, 900);
       var groups = U.arr(data.skills).map(function (g) {
         // Keep only skills that the memory actually supports.
         var items = U.unique(U.arr(g && g.items).map(function (s) { return clean(s, 60); }).filter(function (s) {
@@ -156,19 +181,20 @@
       U.arr(data.experience).forEach(function (e) {
         var i = e && e.index;
         if (typeof i === 'number' && cv.experience[i]) {
-          var b = U.arr(e.bullets).map(function (x) { return clean(x); }).filter(function (x) { return x.length > 15; });
+          var b = U.arr(e.bullets).map(function (x) { return clean(x); }).filter(function (x) { return x.length > 15 && honest(x); });
           if (b.length) cv.experience[i].bullets = b.slice(0, Math.max(cv.experience[i].bullets.length, 1) + 1);
         }
       });
       U.arr(data.projects).forEach(function (e) {
         var i = e && e.index;
         if (typeof i === 'number' && cv.projects[i]) {
-          var b = U.arr(e.bullets).map(function (x) { return clean(x); }).filter(function (x) { return x.length > 15; });
+          var b = U.arr(e.bullets).map(function (x) { return clean(x); }).filter(function (x) { return x.length > 15 && honest(x); });
           if (b.length) cv.projects[i].bullets = b.slice(0, 4);
         }
       });
       cv.meta.aiNotes = U.arr(data.notes).map(function (n) { return clean(n, 300); }).filter(Boolean).slice(0, 10);
     }
+    cv.meta.aiRejected = rejected.slice(0, 10);
     cv.meta.engine = 'ai';
     return cv;
   }
@@ -189,5 +215,5 @@
     });
   }
 
-  CVM.ai = { enhance: enhance, research: research, merge: merge, getKey: getKey, setKey: setKey, DEFAULT_MODEL: DEFAULT_MODEL };
+  CVM.ai = { enhance: enhance, research: research, rewrite: rewrite, merge: merge, inventedNumbers: inventedNumbers, getKey: getKey, setKey: setKey, setSdk: setSdk, DEFAULT_MODEL: DEFAULT_MODEL, SDK_URL: SDK_URL };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -6,7 +6,13 @@
   "scripts": {
     "start": "npx --yes http-server -c-1 -p 8080 .",
     "test": "node --test",
-    "e2e": "node tests/e2e.js"
+    "e2e": "node tests/e2e.js",
+    "test:ai-contract": "node tests/ai-contract.js",
+    "test:ai": "node tests/ai-live.js"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@anthropic-ai/sdk": "0.128.0",
+    "esbuild": "0.25.10"
+  }
 }

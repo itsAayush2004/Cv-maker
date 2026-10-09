@@ -1,0 +1,26 @@
+Game Developer / Interactive Experience Engineer — AMDG Collective LLP (Remote, contract)
+Experience Level: Mid-Level to Senior
+We are looking for a Game Developer / Interactive Experience Engineer who can take a high-level concept from a client and turn it into a well-structured, technically sound, interactive experience.
+Key Responsibilities
+- Translate non-technical ideas into practical technical requirements and development plans.
+- Architect interactive experiences from the ground up.
+- Develop prototypes and proof-of-concepts to validate ideas before full development.
+- Build interactive gameplay, simulations, environments, interfaces, mechanics, or other required experiences.
+- Design a clean and scalable technical architecture for the project.
+- Develop, test, debug, and optimize interactive applications or game experiences.
+- Implement gameplay systems, interactions, UI/UX elements, animations, environments, data-driven functionality.
+- Integrate third-party tools, APIs, assets, or services when required.
+- Communicate technical concepts clearly to non-technical stakeholders.
+Required Qualifications
+- 2+ years of professional experience in game development, interactive application development, simulation development, or a closely related field.
+- Strong programming skills in one or more relevant languages such as C#, C++, JavaScript/TypeScript, or Python.
+- Experience with at least one major game or interactive development platform such as Unity, Unreal Engine, Godot.
+- Understanding of software architecture and object-oriented programming.
+- Strong debugging and problem-solving skills.
+- Strong written and verbal English communication skills.
+Strongly Preferred
+- Experience taking a project from concept to architecture to prototype to production.
+- Experience building prototypes or MVPs from relatively high-level ideas.
+- Experience with 2D and/or 3D interactive environments.
+- Experience with UI/UX implementation within interactive applications.
+- Experience integrating AI-generated or externally supplied assets into an interactive experience.

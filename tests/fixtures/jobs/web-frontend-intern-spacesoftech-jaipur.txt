@@ -1,0 +1,13 @@
+Front End Developer Intern — Space Softech, Jaipur
+We are looking for a Frontend Developer Intern who is eager to learn and gain hands-on experience in web development. The candidate should have basic knowledge of HTML, CSS, and JavaScript, with React.js being an added advantage.
+Key Responsibilities:
+- Develop responsive and user-friendly web interfaces.
+- Convert designs into functional webpages.
+- Integrate REST APIs and work with JSON.
+- Debug and resolve frontend issues.
+- Collaborate with developers and designers.
+- Follow coding and development best practices.
+Requirements:
+- Fresher or 0–1 year experience.
+- Basic knowledge of HTML, CSS, JavaScript, React.js, and Git/GitHub.
+- Good problem-solving skills and willingness to learn.

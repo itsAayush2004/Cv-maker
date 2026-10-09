@@ -1,0 +1,16 @@
+Unity2D Developer Intern — SPAAK KAI LLP, Delhi
+Internship Period: 6 Months. Stipend: Rs 10,000 per month.
+Key Responsibilities
+- Write, test, and maintain gameplay code for character mechanics, controls, UI interactions, and core game systems.
+- Integrate 2D/3D assets, animations, and visual effects into the game engine.
+- Collaborate with game designers and artists to deliver high-quality gameplay features.
+- Optimize game performance for mobile and desktop platforms.
+- Identify and resolve gameplay, logic, and graphical issues in coordination with QA and design teams.
+- Ensure stable and efficient performance across multiple devices and environments.
+- Develop tools and scripts to automate workflows and improve development efficiency.
+- Manage asset and code versioning using GitHub.
+- Implement AI-assisted systems for testing, automation, and workflow enhancement where applicable.
+Required Skills and Qualifications
+- Participate in end-to-end game development projects using industry-standard game engines.
+- Collaborate closely with designers, artists, and engineers within real production pipelines.
+- Gain hands-on exposure to AI-assisted development workflows and modern optimization techniques.

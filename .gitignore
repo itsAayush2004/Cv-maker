@@ -3,3 +3,8 @@ node_modules/
 .DS_Store
 # Personal data (phone, email, full memory) — never commit to the public repo
 private/
+
+# Secrets — keep API keys in your environment, never in files here
+.env
+.env.*
+*.key

@@ -18,7 +18,7 @@
   /** Does text contain keyword k (under any alias)? Uses the same rules as job analysis. */
   function textHas(text, k) {
     if (!text) return false;
-    if (k.category === 'title') return titleSimilarity(text, k.term) >= 0.67;
+    if (k.category === 'title') return titleSimilarity(text, k.term) >= 0.66;
     if (k.category === 'phrase' || k.inferred) return U.hasTerm(text, k.term);
     if (DB.findSkills(text).some(function (s) { return s.name === k.term; })) return true;
     // Raw spelling fallback only for terms the dictionary doesn't know (its context rules must win).
@@ -44,15 +44,31 @@
     return out;
   }
 
+  // Job-title words that mean the same job.
+  var TITLE_SYNONYMS = {
+    engineer: ['developer', 'programmer'], developer: ['engineer', 'programmer'], programmer: ['developer', 'engineer'],
+    animator: ['animation', 'animations'], editor: ['editing'], designer: ['design'], creator: ['creation'], visualizer: ['visualization']
+  };
+
+  function normTitle(t) {
+    return U.str(t).replace(/front[\s-]+end/gi, 'frontend').replace(/back[\s-]+end/gi, 'backend').replace(/full[\s-]+stack/gi, 'fullstack');
+  }
+
   function titleWords(t) {
-    return U.words(t).filter(function (w) { return w.length > 1 && !/^(of|and|the|for|at|in|a|an|to|with|i|ii|iii|jr|sr)$/.test(w); });
+    return U.words(normTitle(t)).filter(function (w) { return w.length > 1 && !/^(of|and|the|for|at|in|a|an|to|with|i|ii|iii|jr|sr)$/.test(w); });
   }
 
   function titleSimilarity(text, title) {
-    var tw = titleWords(title);
+    var tw = titleWords(String(title).replace(SENIORITY_RE, ' '));
     if (!tw.length) return 0;
-    var lower = U.str(text).toLowerCase();
-    var hit = tw.filter(function (w) { return U.hasTerm(lower, w); }).length;
+    var lower = normTitle(text).toLowerCase();
+    var hit = tw.filter(function (w) {
+      if (U.hasTerm(lower, w)) return true;
+      // "unity2d" counts as Unity, "frontend" as Frontend Development, etc.
+      if ((TITLE_SYNONYMS[w] || []).some(function (x) { return U.hasTerm(lower, x); })) return true;
+      var c = DB.canonical(w);
+      return c && c.toLowerCase() !== w && U.hasTerm(lower, c);
+    }).length;
     return hit / tw.length;
   }
 
@@ -144,6 +160,8 @@
     var d = U.str(k.display || k.term);
     if (/\b(manager|creator|developer|engineer|designer|animator|artist|editor|writer)s?$/i.test(d) && DB.categoryOf(k.term) !== 'phrase') return k.term;
     if (DB.categoryOf(k.term) === 'phrase') return d.charAt(0).toUpperCase() + d.slice(1);
+    // "Unreal" → "Unreal Engine": the fuller canonical name contains the job's spelling, so it matches both.
+    if (k.term.toLowerCase().indexOf(d.toLowerCase()) === 0 && k.term.length > d.length) return k.term;
     return /[A-Z0-9.+#]/.test(d) && d.length > 1 && !/^[A-Z][a-z]+s$/.test(d) ? d : k.term;
   }
   function buildSkills(p, analysis, corpus, usedText) {
@@ -166,12 +184,19 @@
     if (!analysis.empty && usedText) {
       var jdWords = Object.create(null);
       U.words(analysis.rawText).forEach(function (w) { if (w.length > 3) jdWords[w.replace(/s$/, '')] = 1; });
-      rest = rest.filter(function (s) {
-        var sharesJobWord = U.words(s).some(function (w) { return w.length > 3 && jdWords[w.replace(/s$/, '')]; });
-        return sharesJobWord || U.hasTerm(usedText, s) || DB.findSkills(usedText).some(function (f) { return f.name === DB.canonical(s); });
+      var usedSkills = DB.findSkills(usedText).map(function (f) { return f.name; });
+      var rel = Object.create(null);
+      rest.forEach(function (sk) {
+        var ws = U.words(sk).filter(function (w) { return w.length > 3; });
+        var share = ws.length ? ws.filter(function (w) { return jdWords[w.replace(/s$/, '')]; }).length / ws.length : 0;
+        var used = U.hasTerm(usedText, sk) || usedSkills.indexOf(DB.canonical(sk)) >= 0;
+        rel[sk] = share + (used ? 1 : 0);
       });
+      // Keep skills the CV's content uses, or most of whose words appear in the job post; most relevant first.
+      rest = rest.filter(function (sk) { return rel[sk] >= 0.5; }).sort(function (a, b) { return rel[b] - rel[a]; });
+    } else {
+      rest.sort(function (a, b) { return (DB.categoryOf(a) === 'phrase') - (DB.categoryOf(b) === 'phrase'); });
     }
-    rest.sort(function (a, b) { return (DB.categoryOf(a) === 'phrase') - (DB.categoryOf(b) === 'phrase'); });
     rest.forEach(function (s) { add(s, null, false); });
     // 3. Soft skills only when the job asks for them and you have evidence.
     var soft = keywords.filter(function (k) { return k.category === 'soft' && textHas(corpus, k); }).map(function (k) { return k.term; });
@@ -238,13 +263,15 @@
     if (o.mirrorTitle !== false && a.title) {
       var ownTitles = [p.basics.headline].concat(p.basics.headlines, p.experience.map(function (e) { return e.role; }), p.projects.map(function (x) { return x.role; })).join(' ');
       var target = a.title.replace(SENIORITY_RE, function (w) { return U.hasTerm(ownTitles, w.trim()) ? w : ' '; }).replace(/\s+/g, ' ').trim();
-      var evidence = ownTitles + ' ' + p.skills.map(function (s) { return s.name; }).join(' ');
+      var evidence = ownTitles + ' ' + p.skills.map(function (s) { return s.name; }).join(' ') + ' ' + DB.findSkills(corpus).map(function (f) { return f.name; }).join(' ');
       var sim = titleSimilarity(evidence, target);
-      if (target && sim >= 0.6) {
+      // Never mirror a title that names a skill your memory doesn't show (e.g. "AI Engineer" without AI work).
+      var unbacked = DB.findSkills(target).filter(function (f) { return !textHas(corpus, { term: f.name, display: f.matched, category: f.category }); });
+      if (target && sim >= 0.6 && !unbacked.length) {
         headline = target;
         titleNote = 'Headline set to "' + target + '" to mirror the job title (your memory supports it).';
       } else {
-        titleNote = 'Your memory doesn\'t clearly support the title "' + a.title + '" — using your closest accurate headline. Add a matching role or headline in memory if accurate.';
+        titleNote = 'Your memory doesn\'t clearly support the title "' + a.title + '"' + (unbacked.length ? ' (no evidence of ' + unbacked.map(function (f) { return f.name; }).join(', ') + ')' : '') + ' — using your closest accurate headline. Add a matching role or headline in memory if accurate.';
       }
     }
     if (headline === p.basics.headline && p.basics.headlines.length && !a.empty) {
@@ -252,7 +279,8 @@
       var options = [p.basics.headline].concat(p.basics.headlines).filter(Boolean);
       var scored = options.map(function (h, i) {
         var kw = keywords.reduce(function (acc, k) { return acc + (k.category !== 'title' && textHas(h, k) ? k.weight : 0); }, 0);
-        return { h: h, s: (a.title ? titleSimilarity(h, a.title) * 20 : 0) + kw - i * 0.01 };
+        var jobOverlap = titleWords(h).filter(function (w) { return U.hasTerm(a.rawText || '', w); }).length;
+        return { h: h, s: (a.title ? titleSimilarity(h, a.title) * 20 : 0) + kw + jobOverlap * 0.5 - i * 0.01 };
       }).sort(function (x, y) { return y.s - x.s; });
       if (scored[0].h !== headline) { headline = scored[0].h; titleNote = (titleNote ? titleNote + ' ' : '') + 'Picked your headline "' + headline + '" as the closest match.'; }
     }
@@ -436,6 +464,9 @@
     var dateIssues = cv.experience.filter(function (e) { return !e.dates; }).length;
     add(dateIssues ? 'warn' : 'pass', 'Dates on every role (consistent "Mon YYYY" format)', dateIssues ? dateIssues + ' role(s) have no dates.' : '');
 
+    if (analysis && !analysis.empty && (analysis.keywords || []).length < 9) {
+      add('info', 'Short job post: only ' + analysis.keywords.length + ' keywords found', 'The score is less reliable — paste the full description if there is more.');
+    }
     if (analysis && !analysis.empty) {
       var text = cvText(cv);
       var stuffed = (analysis.keywords || []).filter(function (k) { return k.category !== 'title' && U.countTerm(text, k.display || k.term) > Math.max(10, (k.count || 1) * 4); });

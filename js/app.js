@@ -378,7 +378,8 @@
     if (!state.settings.aiEnabled) ai += '<span class="ai-status">Off. Turn on in Settings with your Anthropic API key to research the company on the web and rewrite bullets in the job\'s language — using only facts from your memory.</span>';
     else ai += '<button class="btn primary" type="button" data-action="ai-enhance"' + (aiBusy || a.empty ? ' disabled' : '') + '>' + (aiBusy ? '<span class="spinner"></span> Working…' : '✨ Research company & rewrite') + '</button><span class="ai-status" id="aiStatus">' +
       (a.empty ? 'Paste a job first.' : r.cv.meta.engine === 'ai' ? 'This CV was rewritten by AI. Review every line before sending.' : 'Uses your API key; your offline CV stays as the fallback.') + '</span>';
-    if (r.cv.meta.aiNotes && r.cv.meta.aiNotes.length) ai += '<div><b>AI suggestions</b><ul>' + r.cv.meta.aiNotes.map(function (n) { return '<li>' + E(n) + '</li>'; }).join('') + '</ul></div>';
+    if (r.cv.meta.aiRejected && r.cv.meta.aiRejected.length) ai += '<div><b>Blocked ' + r.cv.meta.aiRejected.length + ' AI line' + (r.cv.meta.aiRejected.length > 1 ? 's' : '') + '</b> (they contained numbers not in your memory)<ul>' + r.cv.meta.aiRejected.map(function (n) { return '<li>' + E(n) + '</li>'; }).join('') + '</ul></div>';
+        if (r.cv.meta.aiNotes && r.cv.meta.aiNotes.length) ai += '<div><b>AI suggestions</b><ul>' + r.cv.meta.aiNotes.map(function (n) { return '<li>' + E(n) + '</li>'; }).join('') + '</ul></div>';
     if (lastResearch) ai += '<details><summary>Company research</summary><div class="research">' + E(lastResearch) + '</div></details>';
     ai += '</div>';
     h.push(ai);

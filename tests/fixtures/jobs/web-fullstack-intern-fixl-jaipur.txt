@@ -1,0 +1,30 @@
+Full Stack Developer Intern — Fixlsolution, Jaipur
+Experience: Fresher / 0–1 Year
+About the Role
+We are looking for a motivated Full Stack Developer who is interested in building and maintaining web applications. The candidate will work on both frontend and backend development, integrate APIs, work with databases, and collaborate with the technical team.
+Key Responsibilities
+- Develop and maintain responsive web applications.
+- Build frontend interfaces using HTML, CSS, JavaScript and React.js.
+- Develop backend services and APIs using Node.js and Express.js.
+- Integrate REST APIs with frontend applications.
+- Work with databases such as MongoDB and PostgreSQL.
+- Perform CRUD operations and manage application data.
+- Implement basic authentication and authorization.
+- Work with JWT, role-based access control (RBAC) and secure API practices.
+- Debug and fix frontend and backend issues.
+- Use Git/GitHub for version control and code collaboration.
+- Optimize applications for performance, responsiveness and usability.
+Required Skills
+- Basic knowledge of HTML, CSS and JavaScript.
+- Knowledge of React.js.
+- Basic knowledge of Node.js and Express.js.
+- Understanding of REST APIs.
+- Basic knowledge of MongoDB / PostgreSQL.
+- Understanding of Git and GitHub.
+- Basic understanding of authentication, JWT and APIs.
+- Good problem-solving and debugging skills.
+- Good communication and willingness to learn.
+Good to Have
+- TypeScript, Prisma, JWT and RBAC, API testing using Postman, basic knowledge of deployment/cloud platforms, responsive design
+Educational Qualification
+- B.Tech / B.E. – CSE, IT or related field

@@ -1,0 +1,14 @@
+Blender 3D Artist & Animator — Bhramakar Solution Pvt Ltd (Remote)
+We are seeking a creative Blender 3D Artist & Animator to transform bold concepts into striking, hyper-realistic visuals: 3D advertising campaigns, product visualizations, and cinematic branding assets.
+Key Responsibilities
+- Create production-ready character and object animations in Blender.
+- Develop photorealistic 3D product mockups, lighting setups, and shaders.
+- Collaborate closely with creative directors and design teams to match brand standards.
+- Contribute to storyboarding, scene layout, pre-visualization, and scene rendering.
+- Optimize 3D assets, textures, and geometry for final output pipelines
+Required Qualifications
+- Strong proficiency in Blender and its native toolsets (Cycles/EEVEE, Geometry Nodes, Shader Editor).
+- A portfolio showcasing high-quality CGI animations, product shots, or motion graphics.
+- Solid understanding of realistic lighting, PBR shading, and basic compositing.
+- Experience with character rigging, vertex weighting, or motion capture tools is a major plus.
+- Exceptional attention to detail and ability to self-manage timelines

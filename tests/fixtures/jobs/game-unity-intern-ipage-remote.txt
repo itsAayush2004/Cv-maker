@@ -1,0 +1,15 @@
+Unity Developer Intern — IPage Group (Remote)
+IPAGE UM Services provides geospatial, drone, mapping, and AI-driven automation solutions.
+About the Internship: 6-month internship for students who have prior learning experience with Unity and are interested in working on real-time drone simulation projects with our R&D and simulation team.
+Key Responsibilities:
+- Work with our simulation team to build interactive drone training environments using Unity
+- Develop drone movement physics, UI elements, and scene logic in C#
+- Assist in integrating features like flight path drawing, crash detection, and multi-drone scenarios
+- Test and optimize simulator builds for different platforms (PC/Web)
+- Participate in sprint reviews, feedback sessions, and documentation
+Who Can Apply:
+- Must have learning experience or training in Unity and C#
+- Should be familiar with basic 3D environments, animations, and game mechanics
+- Passionate about simulation, gaming, or drone technology
+- Must be a self-learner and team collaborator with clear communication
+- Open to students, recent graduates, or self-taught developers

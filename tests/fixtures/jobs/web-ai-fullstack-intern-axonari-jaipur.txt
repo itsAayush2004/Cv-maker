@@ -1,0 +1,21 @@
+AI + Full Stack Development Intern — Axonari Software, Jaipur
+Experience: 0–1 year / Freshers welcome
+Key Responsibilities
+- Build and maintain full-stack web applications using React, Next.js, and Node.js
+- Develop AI-powered features, agents, and automations using LLM APIs such as Claude, OpenAI, and Gemini
+- Build and integrate REST APIs and third-party services
+- Work with databases and backend services
+- Use modern AI coding tools such as Claude Code and Cursor to accelerate development
+- Debug, test, and improve applications
+- Collaborate with developers to turn requirements into working features
+Required Skills
+- React.js, Next.js, and Node.js
+- JavaScript / TypeScript
+- Understanding of REST APIs and basic database concepts
+- Git and GitHub
+- Good problem-solving and debugging skills
+- Ability to learn independently and work with technical documentation
+Good to Have
+- Experience with Claude Code, Cursor, Codex, or similar AI coding agents
+- Experience with LLM APIs, chatbots, or AI agents
+- Experience with PostgreSQL/MongoDB, n8n, or Vercel

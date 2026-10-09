@@ -196,8 +196,26 @@ test('real job posts: title and company are parsed', () => {
     'anim-blender-rigger-cbx.txt': ['Blender Rigger & Animator', 'CBX'],
     'anim-3d-animator-riyanjaly.txt': ['3D Animator', 'Riyanjaly & Ansh Media'],
     'smm-jainson-locks-jaipur.txt': ['Social Media Manager & Content Creator', 'Jainson Locks'],
-    'smm-content-creator-daafk-jaipur.txt': ['Content Creator & Social Media Manager', 'DA AFK Ventures']
+    'smm-content-creator-daafk-jaipur.txt': ['Content Creator & Social Media Manager', 'DA AFK Ventures'],
+    'game-unity-intern-ipage-remote.txt': ['Unity Developer Intern', 'IPage Group'],
+    'game-unity2d-intern-spaakkai-delhi.txt': ['Unity2D Developer Intern', 'SPAAK KAI LLP'],
+    'game-unreal-intern-xogar-bengaluru.txt': ['Unreal Developer', 'Xogar Games'],
+    'game-interactive-engineer-amdg-remote.txt': ['Game Developer / Interactive Experience Engineer', 'AMDG Collective LLP'],
+    'game-xr-developer-reds-bengaluru.txt': ['Real-Time 3D & XR Developer', 'REDS'],
+    'game-html5-intern-spark-chandigarh.txt': ['HTML5 Game Developer', 'Spark Technologies'],
+    'web-ai-fullstack-intern-axonari-jaipur.txt': ['AI + Full Stack Development Intern', 'Axonari Software'],
+    'web-frontend-intern-spacesoftech-jaipur.txt': ['Front End Developer Intern', 'Space Softech'],
+    'web-react-native-intern-logical-jaipur.txt': ['React Native Developer Intern', 'Logical InfoSoft Pvt. Ltd.'],
+    'web-fullstack-intern-fixl-jaipur.txt': ['Full Stack Developer Intern', 'Fixlsolution'],
+    'web-backend-nestjs-riolabz-remote.txt': ['Backend Developer', 'Riolabz Technologies'],
+    'anim-3d-intern-tridum-remote.txt': ['3D Graphics & Animation Intern', 'Tridum VISTA 360 LLC'],
+    'anim-blender-artist-bhramakar-remote.txt': ['Blender 3D Artist & Animator', 'Bhramakar Solution Pvt Ltd'],
+    'anim-senior-3d-visualizer-udbhava-remote.txt': ['Senior 3D Visualizer', 'Emancipation Edutech'],
+    'smm-reels-editor-lembark-surat.txt': ['Reels & Video Editor', 'Lembark Solutions'],
+    'smm-video-creator-medikonda-hyderabad.txt': ['Video Content Creator & Editor', 'Medikonda Nutrients'],
+    'smm-manager-dietitian-mohali.txt': ['Social Media Manager', 'Dietitian Sheenam LLP']
   };
+  assert.equal(Object.keys(expected).length, fs.readdirSync(JOBS).length, 'every fixture has an expectation');
   for (const [f, [title, company]] of Object.entries(expected)) {
     const a = CVM.analyzer.analyze(job(f));
     assert.equal(a.title, title, f);
@@ -247,4 +265,37 @@ test('trimOnce removes the weakest content first and stops when lean', () => {
   assert.ok(n > 0 && n < 100);
   assert.equal(r.cv.experience[0].bullets[0], firstBullet, 'best bullet survives');
   assert.ok(r.cv.experience.every((e) => e.bullets.length >= 1));
+});
+
+test('headlines never claim unbacked skills or seniority (real posts)', () => {
+  const st = CVM.profile.normalizeState({ profile: CVM.STARTER_PROFILE, settings: { maxProjects: 4 } });
+  const h = (f) => CVM.tailor.run(st.profile, job(f), st.settings).cv.basics.headline;
+  assert.ok(!/\bAI\b/.test(h('web-ai-fullstack-intern-axonari-jaipur.txt')), 'no "AI" title without AI evidence');
+  assert.ok(!/senior/i.test(h('anim-senior-3d-visualizer-udbhava-remote.txt')));
+  assert.ok(!/XR/.test(h('game-xr-developer-reds-bengaluru.txt')), 'no XR title without XR evidence');
+  assert.equal(h('web-frontend-intern-spacesoftech-jaipur.txt'), 'Front End Developer');
+  assert.equal(h('game-unity2d-intern-spaakkai-delhi.txt'), 'Unity2D Developer');
+  assert.equal(h('web-fullstack-praverse-vadodara.txt'), 'Full Stack Engineer');
+});
+
+test('false matches from real posts stay fixed', () => {
+  const names = (t) => CVM.skillsDb.findSkills(t).map((s) => s.name);
+  assert.ok(!names('Our R&D team').includes('R'));
+  assert.ok(!names('Strong understanding of Instagram & YouTube algorithms').includes('Data Structures & Algorithms'));
+  const a = CVM.analyzer.analyze(job('game-html5-intern-spark-chandigarh.txt'));
+  assert.ok(!a.keywords.some((k) => k.term === 'Spark'), 'company name is not Apache Spark');
+});
+
+test('AI merge blocks lines with invented numbers', () => {
+  require('../js/ai.js');
+  const st = CVM.profile.normalizeState({ profile: CVM.STARTER_PROFILE });
+  const off = CVM.tailor.run(st.profile, job('game-unity-brsoftech-jaipur.txt'), st.settings);
+  const out = CVM.ai.merge(off.cv, {
+    headline: 'Unity Developer', summary: 'Unity developer who shipped 12 games to 2 million players across mobile stores worldwide.',
+    skills: [], experience: [], notes: [],
+    projects: [{ index: 0, bullets: ['Built a generator assembling 160+ hex tiles into a playable world', 'Grew the game to 40k downloads'] }]
+  }, st.profile);
+  assert.notEqual(out.summary, 'Unity developer who shipped 12 games to 2 million players across mobile stores worldwide.');
+  assert.deepEqual(out.projects[0].bullets, ['Built a generator assembling 160+ hex tiles into a playable world']);
+  assert.equal(out.meta.aiRejected.length, 2);
 });

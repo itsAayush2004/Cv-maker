@@ -1,0 +1,21 @@
+React Native Developer Intern — Logical InfoSoft Pvt. Ltd., Jaipur
+Experience: 1–3 Years (Freshers with strong React Native projects may also apply)
+Key Responsibilities
+- Develop and maintain cross-platform mobile applications using React Native.
+- Build clean, reusable, and maintainable code following best practices.
+- Integrate REST APIs and third-party services into mobile applications.
+- Collaborate with UI/UX designers to implement responsive and intuitive interfaces.
+- Debug, troubleshoot, and resolve application issues to ensure optimal performance.
+- Optimize applications for speed, scalability, and reliability.
+- Publish and maintain applications on the Google Play Store and Apple App Store (preferred).
+Required Skills
+- Strong hands-on experience with React Native.
+- Good knowledge of JavaScript (ES6+) and TypeScript.
+- Experience with Redux, Context API, or other state management libraries.
+- Knowledge of RESTful APIs and JSON.
+- Understanding of Git/GitHub version control.
+- Familiarity with Android Studio and Xcode.
+- Experience in debugging, testing, and performance optimization.
+Preferred Qualifications
+- Bachelor's degree in Computer Science, IT, BCA, B.Tech, or a related field.
+- Experience with Firebase, push notifications, and app deployment is an added advantage.

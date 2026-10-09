@@ -1,0 +1,18 @@
+Backend Developer (Node.js/NestJS) - Remote — Riolabz Technologies
+We are looking for a passionate Backend Developer with strong experience in Node.js and NestJS to build scalable, secure, and high-performance web applications.
+Responsibilities
+- Develop and maintain RESTful APIs using Node.js and NestJS
+- Design and optimize database schemas and queries
+- Integrate third-party APIs and payment gateways
+- Implement authentication, authorization, and security best practices
+- Write clean, reusable, and well-documented code
+- Debug, troubleshoot, and optimize application performance
+- Collaborate with cross-functional teams throughout the development lifecycle
+Requirements
+- Strong knowledge of Node.js and NestJS
+- Experience with MongoDB or PostgreSQL
+- Good understanding of REST APIs and API security
+- Experience with Git and version control
+- Knowledge of JWT, OAuth, and authentication mechanisms
+- Familiarity with Docker, AWS, or cloud deployment is an advantage
+- Strong problem-solving and communication skills

@@ -1,0 +1,27 @@
+Unreal Developer - Internship — Xogar Games, Bengaluru
+We are looking for a talented and passionate Unreal Developer Intern with a solid understanding of C++ programming to join our development team, contributing to the creation and integration of game mechanics, asset pipelines, and immersive experiences for our AAA title.
+Key Responsibilities:
+- Assist in the integration of gameplay features and mechanics in Unreal Engine 5 using both Blueprints and C++.
+- Support the implementation and optimization of game assets, visual effects, and environmental interactions.
+- Collaborate with the design and art teams to ensure smooth implementation of assets and systems.
+- Write clean, efficient, and well-documented C++ code for gameplay systems and tools.
+- Troubleshoot and debug technical issues related to game development.
+- Work on enhancing the performance and quality of game features.
+- Participate in team meetings, code reviews, and contribute ideas for game improvements.
+Required Skills & Tools:
+- Game Engine: Unreal Engine 5 (Essential)
+- Programming Languages: C++ (Good foundational knowledge required)
+- Version Control Systems: Plastic SCM / Git / Perforce
+- 3D Software (Basic understanding): Autodesk Maya / Blender / 3ds Max (for asset handling)
+- Texturing (Basic understanding): Substance Painter / Substance Designer
+- Visual Scripting: Familiarity with Unreal Blueprints
+- Understanding of game development pipeline and real-time rendering.
+- Good problem-solving and debugging skills.
+Good to Have:
+- Understanding of multiplayer game development.
+- Basic knowledge of shaders and materials in Unreal Engine.
+- Passion for game design and player experience.
+- Familiarity with performance optimization techniques.
+Eligibility Criteria:
+- Pursuing or recently completed a degree/diploma in Computer Science, Game Development, or a related field.
+- Strong communication skills and ability to work collaboratively in a team environment.
